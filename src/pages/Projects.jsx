@@ -207,13 +207,46 @@ function Projects() {
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-lg"
+        className="lg:hidden fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/80 backdrop-blur-md border border-gray-200 shadow-lg transition-all duration-300 active:scale-95"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        style={{
+          boxShadow: isMobileMenuOpen
+            ? '0 8px 32px 0 rgba(0,0,0,0.18)'
+            : '0 2px 8px 0 rgba(0,0,0,0.10)',
+          border: '1.5px solid #e5e7eb',
+        }}
+        aria-label="Open menu"
       >
-        <div className="w-6 h-6 flex flex-col justify-center items-center">
-          <span className={`block w-5 h-0.5 bg-black transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1' : ''}`}></span>
-          <span className={`block w-5 h-0.5 bg-black transition-all duration-300 mt-1 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1' : ''}`}></span>
-        </div>
+        <motion.div
+          initial={false}
+          animate={isMobileMenuOpen ? { rotate: 180, scale: 1.1 } : { rotate: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 22 }}
+          className="w-7 h-7 flex items-center justify-center relative"
+        >
+          {/* Minimal Hamburger/X animation */}
+          <span
+            className={`absolute left-1/2 top-1/2 w-6 h-0.5 bg-black rounded-full transition-all duration-400
+              ${isMobileMenuOpen
+                ? 'rotate-45 -translate-x-1/2 -translate-y-1/2'
+                : '-translate-x-1/2 -translate-y-2'}
+            `}
+            style={{
+              height: '3px',
+              transition: 'all 0.4s cubic-bezier(.87,-0.41,.19,1.44)',
+            }}
+          />
+          <span
+            className={`absolute left-1/2 top-1/2 w-6 h-0.5 bg-black rounded-full transition-all duration-400
+              ${isMobileMenuOpen
+                ? '-rotate-45 -translate-x-1/2 -translate-y-1/2'
+                : '-translate-x-1/2 translate-y-2'}
+            `}
+            style={{
+              height: '3px',
+              transition: 'all 0.4s cubic-bezier(.87,-0.41,.19,1.44)',
+            }}
+          />
+        </motion.div>
       </button>
 
       {/* Mobile Menu Overlay */}
@@ -243,7 +276,16 @@ function Projects() {
         }}
       >
         <div className="p-4 sm:p-8 lg:p-12 absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-50">
-          <h1 className="text-black mb-4 sm:mb-6 lg:mb-8 font-bold tracking-wider text-lg text-[clamp(1rem,2.5vw,1.5rem)]" style={{ fontFamily: '"Nunito Sans", sans-serif' }}>
+          <h1
+            className="text-black !mb-4 sm:!mb-6 lg:!mb-8 font-bold tracking-wider
+              text-[clamp(1.1rem,4vw,1.3rem)] sm:text-[clamp(1.3rem,5vw,1.9rem)] 
+              max-w-full break-words leading-tight w-full"
+            style={{
+              fontFamily: '"Nunito Sans", sans-serif',
+              wordBreak: "break-word",
+              lineHeight: 1.1,
+            }}
+          >
             StudioDesignPalette
           </h1>
           <Navigation textColor="black" />
@@ -251,9 +293,9 @@ function Projects() {
       </div>
 
       {/* Main Content - Masonry Grid */}
-      <div className="w-full lg:w-[80%] lg:h-screen overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5" ref={containerRef}>
-        <div className="pt-20 lg:pt-0 h-full px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden">
+      <div className="flex justify-center lg:justify-start lg:w-[80%] lg:h-screen overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center " ref={containerRef}>
+        <div className="pt-20 lg:pt-0 h-full px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 w-[90%] lg:w-[100%]">
+          <div className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden !mt-20 md:!mt-20 lg:!mt-0">
             {columns.map((column, columnIndex) => (
               <div key={`column-${columnIndex}`} className="flex-1 flex flex-col gap-2 sm:gap-3 lg:gap-4 min-w-0">
                 {column.map((item, itemIndex) => {
@@ -295,18 +337,17 @@ function Projects() {
                       }}
                       whileHover={{ scale: 1.02 }}
                     >
-                      <div className={`relative overflow-hidden shadow-sm group-hover:shadow-lg transition-all duration-300 bg-gradient-to-br w-full ${
+                      <div className={`relative overflow-hidden shadow-sm group-hover:shadow-lg transition-all duration-300 bg-gradient-to-br w-full    ${
                         item.isLarge 
                           ? 'from-gray-100 to-gray-200 shadow-md' 
                           : 'from-gray-50 to-gray-100 shadow-sm'
                       }`}>
                         {/* Project Image */}
                         <div 
-                          className="w-full relative overflow-hidden object-cover object-center"
+                          className="lg:w-full !sm:max-w-[70%] relative overflow-hidden object-cover object-center"
                           style={{ 
                             height: `${item.height}px`,
                             minHeight: '150px', // Minimum height for mobile
-                            maxWidth: '100%'
                           }}
                         >
                           {/* Main project image */}

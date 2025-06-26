@@ -110,9 +110,9 @@ const Carousel = ({ currentSlide, onSlideChange }) => {
         </div>
       </div>
 
-      {/* Progress Indicators - Bottom Center (Horizontal lines) */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-        <div className="flex gap-3">
+      {/* Progress Indicators - Bottom Center (Desktop) / Left Side Vertical (Mobile) */}
+      <div className="absolute top-1/2 left-4 -translate-y-1/2 z-50 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:top-auto md:translate-y-0">
+        <div className="flex flex-col gap-3 md:flex-row">
           {scrollSnaps.map((_, index) => (
             <motion.button
               key={index}
@@ -123,11 +123,7 @@ const Carousel = ({ currentSlide, onSlideChange }) => {
               whileTap={{ scale: 0.9 }}
             >
               <motion.div
-                className="bg-white/40 transition-all duration-500"
-                style={{
-                  width: '60px',
-                  height: '2px',
-                }}
+                className="bg-white/40 transition-all duration-500 md:w-[60px] md:h-[2px] w-[2px] h-[60px]"
                 animate={{
                   backgroundColor: selectedIndex === index 
                     ? 'rgba(255,255,255,0.9)' 

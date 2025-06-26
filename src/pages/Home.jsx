@@ -221,7 +221,7 @@ function Home() {
             </motion.div>
 
             {/* Menu Grid - Responsive Layout */}
-             <div className="flex items-center justify-center min-h-screen p-4 md:p-8 pt-24 md:pt-20 lg:pt-24">
+             <div className="flex items-center justify-center min-h-screen p-4 md:p-8 pt-24 md:pt-20 lg:pt-24 !mt-20 md:!mt-20 lg:!mt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl w-full">
                 {menuItems.map((item, index) => (
                   <motion.div
@@ -237,7 +237,7 @@ function Home() {
                     whileHover={{ y: -8 }}
                   >
                     {/* Image with responsive dimensions */}
-                    <div className="relative overflow-hidden mb-4 w-full">
+                    <div className="relative overflow-hidden mb-4 w-full flex justify-center items-center">
                       <img
                         src={item.image}
                         alt={item.title}
@@ -264,7 +264,7 @@ function Home() {
                     
                     {/* Category and Type - Above Title - Centered */}
                     <motion.div
-                      className="flex items-center justify-center gap-2 mb-2 flex-wrap"
+                      className="flex items-center justify-center gap-2 !mb-2 flex-wrap !mt-5"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ 
@@ -297,7 +297,7 @@ function Home() {
                     
                     {/* Description */}
                     <motion.p
-                      className="text-slate-600 text-sm font-light leading-relaxed"
+                      className="text-slate-600 text-sm font-light leading-relaxed !pl-10 !pr-10 !pb-5 lg:!pl-0 lg:!pr-0 lg:!pb-0"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ 
