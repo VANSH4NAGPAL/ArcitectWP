@@ -54,24 +54,29 @@ function Home() {
     <div className="relative w-full h-screen overflow-hidden bg-white">
       {/* Logo - Centered at Top */}
       <motion.div
-        className="fixed top-4 md:top-8  left-1/2 md:left-53 transform -translate-x-1/2 z-50"
+        className="fixed flex w-full top-4 md:top-8 left-4 md:left-3 z-50 items-center justify-center md:justify-start"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
       >
         <motion.h1
-          className="text-white font-bold tracking-wider text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center md:text-left "
+          className="flex items-center gap-3 "
           style={{ fontFamily: '"Nunito Sans", sans-serif' }}
           whileHover={{ scale: 1.01 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         >
-          StudioDesignPalette
+          <img
+            src="/logofullw.png"
+            alt="StudioDesignPalette Logo"
+            className="object-contain shadow-black  rounded-lg"
+            style={{ width: 230, height: 'auto' }}
+          />
         </motion.h1>
       </motion.div>
 
       {/* Navigation - Positioned Below Logo */}
       <motion.div
-        className="fixed top-16 md:top-20 lg:top-24 left-4 md:left-8 z-50"
+        className="fixed top-37 md:top-40 lg:top-44 left-4 md:left-8 z-50"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.4 }}
@@ -215,8 +220,14 @@ function Home() {
                 delay: 0.2
               }}
             >
-              <h1 className="text-slate-800 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-center">
-                StudioDesignPalette
+              <h1 className="flex items-center justify-center gap-3 text-slate-800 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-center">
+                <img
+                  src="/images/logofull.png"
+                  alt="StudioDesignPalette Logo"
+                  className="h-9 w-auto object-contain"
+                  style={{ minWidth: 36 }}
+                />
+                <span>StudioDesignPalette</span>
               </h1>
             </motion.div>
 
