@@ -68,8 +68,12 @@ function Home() {
           <img
             src="/logofullw.png"
             alt="StudioDesignPalette Logo"
-            className="object-contain shadow-black  rounded-lg"
-            style={{ width: 230, height: 'auto' }}
+            className="object-contain drop-shadow-2xl"
+            style={{
+              width: 230,
+              height: 'auto',
+              
+            }}
           />
         </motion.h1>
       </motion.div>
@@ -221,12 +225,7 @@ function Home() {
               }}
             >
               <h1 className="flex items-center justify-center gap-3 text-slate-800 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider text-center">
-                <img
-                  src="/images/logofull.png"
-                  alt="StudioDesignPalette Logo"
-                  className="h-9 w-auto object-contain"
-                  style={{ minWidth: 36 }}
-                />
+                
                 <span>StudioDesignPalette</span>
               </h1>
             </motion.div>
