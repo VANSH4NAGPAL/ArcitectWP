@@ -272,29 +272,27 @@ function Projects() {
       <div
         className="hidden lg:flex lg:w-[30%] lg:h-screen flex-col relative bg-cover bg-bottom bg-no-repeat"
         style={{
-          backgroundImage: "url('/images/pb.jpg')"
+          backgroundImage: "url('/images/pb1.jpg')"
         }}
       >
         <div className="p-4 sm:p-8 lg:p-12 absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-50">
-          <h1
-            className="text-black !mb-4 sm:!mb-6 lg:!mb-8 font-bold tracking-wider whitespace-nowrap overflow-hidden min-w-0 shrink text-[clamp(0.8rem,2.5vw,1.3rem)]"
+          <img
+            src="/logofullw.png"
+            alt="StudioDesignPalette Logo"
+            className="object-contain rounded-lg"
             style={{
-              fontFamily: '"Nunito Sans", sans-serif',
-              lineHeight: 1,
-              textOverflow: 'ellipsis',
-              minWidth: 0,
-              width: '100%',
-              maxWidth: '100%'
+              marginLeft: -13,
+              width: 230,
+              height: 'auto',
+              
             }}
-          >
-            StudioDesignPalette
-          </h1>
-          <Navigation textColor="black" />
+          />
+          <Navigation textColor="white" />
         </div>
       </div>
 
       {/* Main Content - Masonry Grid */}
-      <div className="flex justify-center lg:justify-start lg:w-[70%] lg:h-screen overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center " ref={containerRef}>
+      <div className="flex justify-center lg:justify-start lg:w-[70%] lg:h-screen  overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center " ref={containerRef}>
         <div className="pt-20 lg:pt-0 h-full px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 w-[90%] lg:w-[100%]">
           <div className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden !mt-20 md:!mt-20 lg:!mt-0">
             {columns.map((column, columnIndex) => (

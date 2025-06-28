@@ -318,32 +318,22 @@ function ProjectDetail() {
           className="p-12 flex-shrink-0 fixed top-8 left-8 z-50"
           style={{ 
             minWidth: 0,
-            maxWidth: 'calc(33vw - 4rem)' // Constrain to sidebar width minus padding
+            maxWidth: 'calc(33vw - 4rem)'
           }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <motion.h1
-            className="text-black mb-8 font-bold tracking-wider"
+          <img
+            src="/logofull.png"
+            alt="StudioDesignPalette Logo"
+            className="object-contain rounded-lg"
             style={{
-              fontFamily: '"Nunito Sans", sans-serif',
-              fontSize: 'clamp(1rem, 2.5vw, 2.2rem)', // Increased minimum size
-              whiteSpace: 'nowrap', // Prevent wrapping
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '100%',
-              width: 'auto', // Changed from '100%' to 'auto'
-              display: 'inline-block', // Changed from 'block' to 'inline-block'
-              lineHeight: 1.1,
-              letterSpacing: '0.05em' // Slight letter spacing for better readability
+              marginLeft: -13,
+              width: 230,
+              height: 'auto',
             }}
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          >
-            StudioDesignPalette
-          </motion.h1>
-
+          />
           <Navigation textColor="black" noActiveState={true} />
         </motion.div>
       </div>
