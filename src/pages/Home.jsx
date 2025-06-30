@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Carousel from '../components/Carousel';
+// import Carousel from '../components/Carousel'; // Removed Carousel import
 import Navigation from '../components/Navigation';
 import { projects } from '../data/projects';
 import '../App.css';
@@ -70,9 +70,8 @@ function Home() {
             alt="StudioDesignPalette Logo"
             className="object-contain drop-shadow-2xl"
             style={{
-              width: 230,
+              width: 'clamp(120px, 25vw, 230px)', // Responsive width: min 120px, max 230px, scales with viewport
               height: 'auto',
-              
             }}
           />
         </motion.h1>
@@ -325,12 +324,28 @@ function Home() {
         )}
       </AnimatePresence>
 
-      {/* Carousel - only visible when overlay is closed */}
+      {/* Fullscreen Responsive Video - only visible when overlay is closed */}
       {!isOverlayOpen && (
-        <Carousel
-          currentSlide={currentSlide}
-          onSlideChange={handleSlideChange}
-        />
+        <div className="fixed inset-0 w-full h-full z-0 pointer-events-none">
+          <video
+            className="w-full h-full object-cover object-center"
+            src="/BG-VID.mp4" // Replace with your video path
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: '100vw',
+              height: '100vh',
+              minWidth: '100%',
+              minHeight: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
+        </div>
       )}
     </div>
   );

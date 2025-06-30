@@ -205,69 +205,6 @@ function Projects() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
-      {/* Mobile Menu Button */}
-      <button
-        className="lg:hidden fixed top-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/80 backdrop-blur-md border border-gray-200 shadow-lg transition-all duration-300 active:scale-95"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        style={{
-          boxShadow: isMobileMenuOpen
-            ? '0 8px 32px 0 rgba(0,0,0,0.18)'
-            : '0 2px 8px 0 rgba(0,0,0,0.10)',
-          border: '1.5px solid #e5e7eb',
-        }}
-        aria-label="Open menu"
-      >
-        <motion.div
-          initial={false}
-          animate={isMobileMenuOpen ? { rotate: 180, scale: 1.1 } : { rotate: 0, scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          className="w-7 h-7 flex items-center justify-center relative"
-        >
-          {/* Minimal Hamburger/X animation */}
-          <span
-            className={`absolute left-1/2 top-1/2 w-6 h-0.5 bg-black rounded-full transition-all duration-400
-              ${isMobileMenuOpen
-                ? 'rotate-45 -translate-x-1/2 -translate-y-1/2'
-                : '-translate-x-1/2 -translate-y-2'}
-            `}
-            style={{
-              height: '3px',
-              transition: 'all 0.4s cubic-bezier(.87,-0.41,.19,1.44)',
-            }}
-          />
-          <span
-            className={`absolute left-1/2 top-1/2 w-6 h-0.5 bg-black rounded-full transition-all duration-400
-              ${isMobileMenuOpen
-                ? '-rotate-45 -translate-x-1/2 -translate-y-1/2'
-                : '-translate-x-1/2 translate-y-2'}
-            `}
-            style={{
-              height: '3px',
-              transition: 'all 0.4s cubic-bezier(.87,-0.41,.19,1.44)',
-            }}
-          />
-        </motion.div>
-      </button>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            className="lg:hidden fixed inset-0 bg-white z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center" onClick={(e) => e.stopPropagation()}>
-                <Navigation textColor="black" activePage="Projects" isMobile={true} />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Left Sidebar */}
       <div
         className="hidden lg:flex lg:w-[30%] lg:h-screen flex-col relative bg-cover bg-bottom bg-no-repeat"
@@ -284,7 +221,6 @@ function Projects() {
               marginLeft: -13,
               width: 230,
               height: 'auto',
-              
             }}
           />
           <Navigation textColor="white" />
@@ -294,11 +230,24 @@ function Projects() {
       {/* Main Content - Masonry Grid */}
       <div className="flex justify-center lg:justify-start lg:w-[70%] lg:h-screen  overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center " ref={containerRef}>
         <div className="pt-20 lg:pt-0 h-full px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 w-[90%] lg:w-[100%]">
+          {/* Centered Heading in right side */}
+          <div className="flex justify-center items-center w-full mb-8">
+            <h1
+              className="text-center font-extrabold tracking-wide text-gray-900 drop-shadow-lg"
+              style={{
+                fontFamily: '"Nunito Sans", sans-serif',
+                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                letterSpacing: '0.08em',
+                textShadow: '0 2px 16px rgba(0,0,0,0.07)'
+              }}
+            >
+              Projects Gallery
+            </h1>
+          </div>
           <div className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden !mt-20 md:!mt-20 lg:!mt-0">
             {columns.map((column, columnIndex) => (
               <div key={`column-${columnIndex}`} className="flex-1 flex flex-col gap-2 sm:gap-3 lg:gap-4 min-w-0">
                 {column.map((item, itemIndex) => {
-                  // Render skeleton if it's a loading skeleton
                   if (item.isSkeleton) {
                     return (
                       <LoadingSkeleton 
@@ -308,8 +257,6 @@ function Projects() {
                       />
                     );
                   }
-                  
-                  // Render actual project
                   return (
                     <motion.div
                       key={`${item.id}-${columnIndex}-${itemIndex}`}
@@ -346,10 +293,9 @@ function Projects() {
                           className="lg:w-full !sm:max-w-[70%] relative overflow-hidden object-cover object-center"
                           style={{ 
                             height: `${item.height}px`,
-                            minHeight: '150px', // Minimum height for mobile
+                            minHeight: '150px',
                           }}
                         >
-                          {/* Main project image */}
                           <img
                             className="absolute inset-0 w-full h-full object-contain object-center transition-all duration-500 opacity-0 image-fade-in"
                             src={item.mainImage || item.image}
@@ -359,8 +305,6 @@ function Projects() {
                               e.target.classList.add('loaded');
                             }}
                           />
-                          
-                          {/* Hover image overlay */}
                           <img
                             className="absolute inset-0 w-full h-full object-contain object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                             src={item.hoverImage || item.mainImage || item.image}
@@ -368,8 +312,6 @@ function Projects() {
                             loading="lazy"
                           />
                         </div>
-                        
-                        {/* Hover overlay */}
                         <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-95 transition-all duration-300 flex items-center justify-end">
                           <div className="text-black flex justify-start flex-col bg-white w-[90%] h-16 sm:h-18 lg:h-20 transform translate-x-full group-hover:translate-x-0 transition-all duration-300 px-3 sm:px-4 lg:px-6 items-center">
                             <p className="text-gray-500 text-xs sm:text-sm !mt-2 sm:!mt-3 font-light tracking-wide mb-1" style={{ fontFamily: '"Nunito Sans", sans-serif' }}>
@@ -387,15 +329,11 @@ function Projects() {
               </div>
             ))}
           </div>
-          
-          {/* Loading indicator at bottom */}
           {hasMore && !isLoading && displayedProjects.length > 0 && (
             <div className="text-center py-4 sm:py-6 lg:py-8">
               <p className="text-gray-500 text-xs sm:text-sm">Scroll down to load more projects...</p>
             </div>
           )}
-          
-          {/* Final message when all projects are loaded */}
           {!hasMore && displayedProjects.length === projects.length && (
             <div className="text-center py-4 sm:py-6 lg:py-8">
               <p className="text-gray-600 font-medium text-sm sm:text-base">All {projects.length} projects loaded</p>
@@ -403,8 +341,6 @@ function Projects() {
           )}
         </div>
       </div>
-
-      {/* Custom Scrollbar and Shimmer Animation */}
       <style jsx>{`
         .overflow-y-auto::-webkit-scrollbar {
           width: 4px;
@@ -423,16 +359,13 @@ function Projects() {
           object-fit: cover;
           object-position: center;
         }
-        
         .image-fade-in {
           opacity: 0;
           transition: opacity 0.5s ease-in-out;
         }
-        
         .image-fade-in.loaded {
           opacity: 1;
         }
-        
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);
@@ -441,7 +374,6 @@ function Projects() {
             transform: translateX(100%);
           }
         }
-        
         .animate-shimmer {
           animation: shimmer 1.5s infinite;
         }

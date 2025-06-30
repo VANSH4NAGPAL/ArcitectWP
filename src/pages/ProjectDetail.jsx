@@ -228,86 +228,11 @@ function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-x-hidden">
-      {/* Modal for images */}
-      <ImageModal images={modalImages} onClose={() => setModalImages(null)} />
-
-      {/* Mobile Menu Button - Only visible on mobile */}
-      <motion.button
-        className="lg:hidden fixed top-4 sm:top-6 right-4 sm:right-6 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-transparent cursor-pointer"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        whileTap={{ scale: 0.97 }}
-        whileHover={{ scale: 1.08 }}
-      >
-        <motion.svg
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
-          className="w-8 h-8 sm:w-10 sm:h-10"
-          style={{ background: 'transparent', display: 'block' }}
-        >
-          {/* Animated fill circle */}
-          <motion.circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="black"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0, transition: { duration: 0.5, ease: "easeInOut" } }}
-            whileHover={{ opacity: 0.7, transition: { duration: 0.5, ease: "easeInOut" } }}
-            whileTap={{ opacity: 0.7, transition: { duration: 0.3, ease: "easeInOut" } }}
-            style={{ originX: 0.5, originY: 0.5 }}
-          />
-          {/* Stroke circle */}
-          <motion.circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="none"
-            stroke="black"
-            strokeWidth="2.5"
-            initial={{ stroke: "#000", opacity: 1 }}
-            whileHover={{ stroke: "#555", opacity: 0.7, transition: { duration: 0.4 } }}
-            whileTap={{ stroke: "#555", opacity: 0.7, transition: { duration: 0.4 } }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          />
-        </motion.svg>
-      </motion.button>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            className="lg:hidden fixed inset-0 bg-white z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center">
-                <Navigation
-                  textColor="black"
-                  isMobile={true}
-                  noActiveState={true}
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Left Sidebar - Hidden on mobile, visible on desktop */}
+      {/* Left Sidebar */}
       <div
         className="hidden lg:flex lg:w-[33%] lg:h-screen flex-col relative overflow-hidden"
         style={{
-          backgroundImage: "url('/images/pb.jpg')",
+          backgroundImage: "url('/images/pb1.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'bottom',
           backgroundRepeat: 'no-repeat'
@@ -325,7 +250,7 @@ function ProjectDetail() {
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <img
-            src="/logofull.png"
+            src="/logofullw.png"
             alt="StudioDesignPalette Logo"
             className="object-contain rounded-lg"
             style={{
@@ -334,162 +259,181 @@ function ProjectDetail() {
               height: 'auto',
             }}
           />
-          <Navigation textColor="black" noActiveState={true} />
+          <Navigation textColor="white" noActiveState={true} />
         </motion.div>
       </div>
 
       {/* Main Content Area */}
-      <div className="w-full lg:w-[67%] flex flex-col lg:flex-row lg:h-screen overflow-x-hidden">
-        {/* Exterior Section */}
-        {exteriorProjects.length > 0 && (
-          <div
-            className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto"
-            style={{ scrollBehavior: 'smooth' }}
+      <div className="w-full lg:w-[67%] flex flex-col lg:h-screen overflow-x-hidden">
+        {/* Centered Heading at the very top */}
+        <div className="w-full flex justify-center">
+          <h1
+            className="text-center font-extrabold tracking-wide text-gray-900 drop-shadow-lg"
+            style={{
+              fontFamily: '"Nunito Sans", sans-serif',
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              letterSpacing: '0.08em',
+              marginTop: '2.5rem',
+              marginBottom: '1.5rem',
+              textShadow: '0 2px 16px rgba(0,0,0,0.07)'
+            }}
           >
-            <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-20 sm:!pt-24 lg:!pt-20 flex justify-center !mt-12 sm:!mt-16 lg:!mt-0">
-              <div className="flex flex-col items-center">
-                <motion.div
-                  className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                  style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                >
-                  {/* Mobile: Show projects horizontally */}
-                  <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                    {exteriorProjects.map((project, index) => (
-                      <motion.div
-                        key={project.id}
-                        className="relative flex-shrink-0"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                      >
-                        {/* EXTERIOR label for mobile */}
-                        {index === 0 && (
-                          <motion.div
-                            className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
-                          >
-                            EXTERIOR
-                          </motion.div>
-                        )}
-                        <ProjectCard project={project} />
-                      </motion.div>
-                    ))}
-                  </div>
+            Project Details
+          </h1>
+        </div>
+        {/* Everything else starts below the heading */}
+        <div className="flex flex-col lg:flex-row w-full h-full">
+          {/* Exterior Section */}
+          {exteriorProjects.length > 0 && (
+            <div
+              className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-20 sm:!pt-24 lg:!pt-20 flex justify-center !mt-12 sm:!mt-16 lg:!mt-0">
+                <div className="flex flex-col items-center">
+                  <motion.div
+                    className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
+                    style={{ marginTop: '2rem sm:3rem lg:4rem' }}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                  >
+                    {/* Mobile: Show projects horizontally */}
+                    <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
+                      {exteriorProjects.map((project, index) => (
+                        <motion.div
+                          key={project.id}
+                          className="relative flex-shrink-0"
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                        >
+                          {/* EXTERIOR label for mobile */}
+                          {index === 0 && (
+                            <motion.div
+                              className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.8, delay: 0.3 }}
+                            >
+                              EXTERIOR
+                            </motion.div>
+                          )}
+                          <ProjectCard project={project} />
+                        </motion.div>
+                      ))}
+                    </div>
 
-                  {/* Desktop: Show projects vertically */}
-                  <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                    {exteriorProjects.map((project, index) => (
-                      <motion.div
-                        key={project.id}
-                        className="relative"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                      >
-                        {/* EXTERIOR label for desktop */}
-                        {index === 0 && (
-                          <motion.div
-                            className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
-                            style={{ transformOrigin: 'center' }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
-                          >
-                            EXTERIOR
-                          </motion.div>
-                        )}
-                        <ProjectCard project={project} />
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
+                    {/* Desktop: Show projects vertically */}
+                    <div className="hidden lg:flex lg:flex-col items-center gap-16">
+                      {exteriorProjects.map((project, index) => (
+                        <motion.div
+                          key={project.id}
+                          className="relative"
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                        >
+                          {/* EXTERIOR label for desktop */}
+                          {index === 0 && (
+                            <motion.div
+                              className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
+                              style={{ transformOrigin: 'center' }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.8, delay: 0.3 }}
+                            >
+                              EXTERIOR
+                            </motion.div>
+                          )}
+                          <ProjectCard project={project} />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Interior Section */}
-        {interiorProjects.length > 0 && (
-          <div
-            className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}
-            style={{ scrollBehavior: 'smooth' }}
-          >
-            <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
-              <div className="flex flex-col items-center">
-                <motion.div
-                  className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                  style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                >
-                  {/* Mobile: Show projects horizontally */}
-                  <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                    {interiorProjects.map((project, index) => (
-                      <motion.div
-                        key={project.id}
-                        className="relative flex-shrink-0"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                      >
-                        {/* INTERIOR label for mobile */}
-                        {index === 0 && (
-                          <motion.div
-                            className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
-                          >
-                            INTERIOR
-                          </motion.div>
-                        )}
-                        <ProjectCard project={project} />
-                      </motion.div>
-                    ))}
-                  </div>
+          {/* Interior Section */}
+          {interiorProjects.length > 0 && (
+            <div
+              className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
+                <div className="flex flex-col items-center">
+                  <motion.div
+                    className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
+                    style={{ marginTop: '2rem sm:3rem lg:4rem' }}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                  >
+                    {/* Mobile: Show projects horizontally */}
+                    <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
+                      {interiorProjects.map((project, index) => (
+                        <motion.div
+                          key={project.id}
+                          className="relative flex-shrink-0"
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                        >
+                          {/* INTERIOR label for mobile */}
+                          {index === 0 && (
+                            <motion.div
+                              className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.8, delay: 0.3 }}
+                            >
+                              INTERIOR
+                            </motion.div>
+                          )}
+                          <ProjectCard project={project} />
+                        </motion.div>
+                      ))}
+                    </div>
 
-                  {/* Desktop: Show projects vertically */}
-                  <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                    {interiorProjects.map((project, index) => (
-                      <motion.div
-                        key={project.id}
-                        className="relative"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                        style={{
-                          animationDelay: `${index * 0.1}s`,
-                          animation: `fadeInUp 0.6s ease-out forwards`,
-                          opacity: 0
-                        }}
-                      >
-                        {/* INTERIOR label for desktop */}
-                        {index === 0 && (
-                          <motion.div
-                            className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
-                            style={{ transformOrigin: 'center' }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
-                          >
-                            INTERIOR
-                          </motion.div>
-                        )}
-                        <ProjectCard project={project} />
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
+                    {/* Desktop: Show projects vertically */}
+                    <div className="hidden lg:flex lg:flex-col items-center gap-16">
+                      {interiorProjects.map((project, index) => (
+                        <motion.div
+                          key={project.id}
+                          className="relative"
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                          style={{
+                            animationDelay: `${index * 0.1}s`,
+                            animation: `fadeInUp 0.6s ease-out forwards`,
+                            opacity: 0
+                          }}
+                        >
+                          {/* INTERIOR label for desktop */}
+                          {index === 0 && (
+                            <motion.div
+                              className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
+                              style={{ transformOrigin: 'center' }}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.8, delay: 0.3 }}
+                            >
+                              INTERIOR
+                            </motion.div>
+                          )}
+                          <ProjectCard project={project} />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Custom scrollbar styles */}
