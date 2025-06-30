@@ -70,16 +70,6 @@ function Home() {
           muted
           playsInline
           onCanPlayThrough={() => setVideoLoaded(true)}
-          style={{
-            width: '100vw',
-            height: '100vh',
-            minWidth: '100%',
-            minHeight: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
         />
       </div>
 
