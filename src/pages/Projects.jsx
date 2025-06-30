@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { FaBars } from 'react-icons/fa'; // or any icon you like
 import Navigation from '../components/Navigation';
 import { allProjects } from '../data/projects';
 import '../App.css';
@@ -13,6 +14,7 @@ function Projects() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [loadingSkeletons, setLoadingSkeletons] = useState([]);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const navigate = useNavigate();
   
   // Use all projects from projects.js - memoize to prevent recreation
@@ -205,6 +207,61 @@ function Projects() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
+      {/* Animated Mobile Navigation Circle */}
+      <motion.button
+        className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+        onClick={() => setShowMobileNav(true)}
+        aria-label="Open navigation"
+        whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+        whileTap={{ scale: 0.95, rotate: -10 }}
+        initial={{ opacity: 0, y: -20, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <motion.span
+          initial={{ rotate: 0 }}
+          animate={{ rotate: showMobileNav ? 90 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <FaBars className="text-2xl text-gray-800" />
+        </motion.span>
+      </motion.button>
+
+      {/* Animated Mobile Navigation Overlay */}
+      <AnimatePresence>
+        {showMobileNav && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+          >
+            <motion.button
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+              onClick={() => setShowMobileNav(false)}
+              aria-label="Close navigation"
+              whileHover={{ scale: 1.15, rotate: 90 }}
+              whileTap={{ scale: 0.92, rotate: -90 }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <span className="text-2xl text-gray-800">&times;</span>
+            </motion.button>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 30 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <Navigation textColor="black" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Left Sidebar */}
       <div
         className="hidden lg:flex lg:w-[30%] lg:h-screen flex-col relative bg-cover bg-bottom bg-no-repeat"
