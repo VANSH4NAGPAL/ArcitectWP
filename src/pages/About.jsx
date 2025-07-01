@@ -240,9 +240,7 @@ const About = () => {
             </div>
           </section>
         </main>
-        <footer className="w-full text-center text-xs text-gray-400 !py-4 bg-white border-t border-gray-200 !mt-8">
-          &copy; {new Date().getFullYear()} Archdeco
-        </footer>
+        
       </div>
     </div>
   );
