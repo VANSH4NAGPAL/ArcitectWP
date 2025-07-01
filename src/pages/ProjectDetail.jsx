@@ -1,50 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa'; // Add at the top with other imports
+import { FaBars } from 'react-icons/fa';
 import Navigation from '../components/Navigation';
 import { projects, getExteriorProjects, getInteriorProjects } from '../data/projects';
 import '../App.css';
 
 function ProjectDetail() {
   const { id } = useParams();
+  // Convert id to number once
+  const numericId = Number(id);
   const [hoveredProject, setHoveredProject] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [modalImages, setModalImages] = useState(null);
-  const [modalIndex, setModalIndex] = useState(0); // 0 for main, 1 for hover
-  const [showMobileNav, setShowMobileNav] = useState(false); // Add this state
+  const [modalIndex, setModalIndex] = useState(0);
+  const [showMobileNav, setShowMobileNav] = useState(false);
+  const [showSections, setShowSections] = useState(false);
 
-  // Find the current project
-  const currentProject = projects.find(p => p.id === parseInt(id));
+  const currentProject = projects.find(p => p.id === numericId);
+  const exteriorProjects = currentProject ? getExteriorProjects(numericId) : [];
+  const interiorProjects = currentProject ? getInteriorProjects(numericId) : [];
 
-  // Get filtered project data based on current project's ID
-  let exteriorProjects = [];
-  let interiorProjects = [];
+  // --- Typing Animation Refs ---
+  const titleRef = useRef(null);
+  const lineRef = useRef(null);
 
-  if (currentProject) {
-    exteriorProjects = getExteriorProjects(id);
-    interiorProjects = getInteriorProjects(id);
-  }
+  useEffect(() => {
+    if (!titleRef.current || !lineRef.current) return;
+    const isMobile = window.innerWidth < 1024;
+    const headingYStart = isMobile ? 80 : window.innerHeight / 2 - 120;
+    const headingYEnd = isMobile ? 20 : 0;
 
-  // Modal for showing one image at a time with navigation, square, transparent, beautiful nav buttons, dull background
+    titleRef.current.style.opacity = 0;
+    lineRef.current.style.opacity = 0;
+    titleRef.current.style.transform = `translateY(${headingYStart}px)`;
+    titleRef.current.innerText = "";
+
+    setTimeout(() => {
+      titleRef.current.style.transition = "opacity 0.7s cubic-bezier(.77,0,.18,1), transform 0.7s cubic-bezier(.77,0,.18,1)";
+      titleRef.current.style.opacity = 1;
+      titleRef.current.style.transform = `translateY(${headingYStart}px)`;
+
+      if (isMobile) {
+        setTimeout(() => {
+          titleRef.current.innerText = "Project Details";
+          titleRef.current.style.transition = "transform 0.9s cubic-bezier(.77,0,.18,1)";
+          titleRef.current.style.transform = `translateY(${headingYEnd}px)`;
+          lineRef.current.style.opacity = 1;
+          lineRef.current.style.transition = "transform 1.3s cubic-bezier(.77,0,.18,1)";
+          lineRef.current.style.transform = "translateX(-50%) scaleX(1)";
+          setTimeout(() => setShowSections(true), 1300);
+        }, 700);
+      } else {
+        setTimeout(() => {
+          let text = "Project Details";
+          let i = 0;
+          titleRef.current.innerText = "";
+          lineRef.current.style.opacity = 1;
+          function typeWriter() {
+            if (i <= text.length) {
+              titleRef.current.innerHTML = text.slice(0, i) + '<span class="typing-indicator">|</span>';
+              i++;
+              setTimeout(typeWriter, 50);
+            } else {
+              titleRef.current.innerHTML = text;
+              titleRef.current.style.transition = "transform 0.9s cubic-bezier(.77,0,.18,1)";
+              titleRef.current.style.transform = `translateY(${headingYEnd}px)`;
+              lineRef.current.style.transition = "transform 1.3s cubic-bezier(.77,0,.18,1)";
+              lineRef.current.style.transform = "translateX(-50%) scaleX(1)";
+              setTimeout(() => setShowSections(true), 1300);
+            }
+          }
+          typeWriter();
+        }, 700);
+      }
+    }, 100);
+  }, []);
+
+  // --- Modal for Images ---
   const ImageModal = ({ images, onClose }) => {
     if (!images) return null;
-    const imageList = [
-      { src: images.main },
-      { src: images.hover }
-    ];
-
-    // Track direction for fade animation
+    const imageList = [{ src: images.main }, { src: images.hover }];
     const [direction, setDirection] = useState(0);
-
-    // Fade variants (no slide, just smooth fade)
     const variants = {
       enter: { opacity: 0, scale: 0.98, position: "absolute" },
       center: { opacity: 1, scale: 1, position: "relative" },
       exit: { opacity: 0, scale: 1.02, position: "absolute" }
     };
-
-    // Handlers for next/prev
     const handleNext = (e) => {
       e.stopPropagation();
       setDirection(1);
@@ -55,7 +96,6 @@ function ProjectDetail() {
       setDirection(-1);
       setModalIndex((prev) => (prev + imageList.length - 1) % imageList.length);
     };
-
     return (
       <AnimatePresence custom={direction}>
         <motion.div
@@ -88,21 +128,14 @@ function ProjectDetail() {
               justifyContent: 'center'
             }}
           >
-            {/* Close Button */}
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-black text-3xl font-bold bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow transition"
               onClick={onClose}
               aria-label="Close"
-              style={{
-                zIndex: 10,
-                backdropFilter: 'blur(4px)',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              style={{ zIndex: 10, backdropFilter: 'blur(4px)', border: 'none', cursor: 'pointer' }}
             >
               &times;
             </button>
-            {/* Back Button */}
             <button
               className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
               onClick={handlePrev}
@@ -111,7 +144,6 @@ function ProjectDetail() {
             >
               <span style={{ fontWeight: 700, fontSize: 28 }}>&#8592;</span>
             </button>
-            {/* Forward Button */}
             <button
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
               onClick={handleNext}
@@ -120,7 +152,6 @@ function ProjectDetail() {
             >
               <span style={{ fontWeight: 700, fontSize: 28 }}>&#8594;</span>
             </button>
-            {/* Smooth Fade Image */}
             <AnimatePresence custom={direction} mode="wait">
               <motion.img
                 key={modalIndex}
@@ -170,43 +201,30 @@ function ProjectDetail() {
           maxHeight: '482px'
         }}
       >
-        {/* Main Image */}
         <motion.img
           src={project.mainImage}
           alt={project.title}
           className="w-full h-full object-cover absolute inset-0"
           initial={{ opacity: 1 }}
-          animate={{
-            opacity: hoveredProject === project.id ? 0 : 1
-          }}
-          transition={{
-            opacity: { duration: 0.6, ease: "easeInOut" }
-          }}
+          animate={{ opacity: hoveredProject === project.id ? 0 : 1 }}
+          transition={{ opacity: { duration: 0.6, ease: "easeInOut" } }}
           style={{
             transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
             transition: 'transform 0.6s ease-out'
           }}
         />
-
-        {/* Hover Image */}
         <motion.img
           src={project.hoverImage}
           alt={project.title}
           className="w-full h-full object-cover absolute inset-0"
           initial={{ opacity: 0 }}
-          animate={{
-            opacity: hoveredProject === project.id ? 1 : 0
-          }}
-          transition={{
-            opacity: { duration: 0.6, ease: "easeInOut" }
-          }}
+          animate={{ opacity: hoveredProject === project.id ? 1 : 0 }}
+          transition={{ opacity: { duration: 0.6, ease: "easeInOut" } }}
           style={{
             transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
             transition: 'transform 0.6s ease-out'
           }}
         />
-
-        {/* Subtle overlay for depth */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"
           initial={{ opacity: 0 }}
@@ -214,8 +232,6 @@ function ProjectDetail() {
           transition={{ duration: 0.4, ease: "easeInOut" }}
         />
       </div>
-
-      {/* Clean project name - left aligned */}
       <motion.div
         className="text-left !pt-4 sm:!pt-5 lg:!pt-7"
         animate={{ y: hoveredProject === project.id ? -3 : 0 }}
@@ -230,7 +246,7 @@ function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-x-hidden">
-      {/* Animated Mobile Navigation Circle */}
+      {/* Mobile Navigation */}
       <motion.button
         className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
         onClick={() => setShowMobileNav(true)}
@@ -249,8 +265,6 @@ function ProjectDetail() {
           <FaBars className="text-2xl text-gray-800" />
         </motion.span>
       </motion.button>
-
-      {/* Animated Mobile Navigation Overlay */}
       <AnimatePresence>
         {showMobileNav && (
           <motion.div
@@ -285,7 +299,7 @@ function ProjectDetail() {
         )}
       </AnimatePresence>
 
-      {/* Left Sidebar */}
+      {/* Sidebar */}
       <div
         className="hidden lg:flex lg:w-[33%] lg:h-screen flex-col relative overflow-hidden"
         style={{
@@ -295,13 +309,9 @@ function ProjectDetail() {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Logo + Navigation Section */}
         <motion.div
           className="p-12 flex-shrink-0 fixed top-8 left-8 z-50"
-          style={{ 
-            minWidth: 0,
-            maxWidth: 'calc(33vw - 4rem)'
-          }}
+          style={{ minWidth: 0, maxWidth: 'calc(33vw - 4rem)' }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -310,211 +320,210 @@ function ProjectDetail() {
             src="/logofullw.png"
             alt="StudioDesignPalette Logo"
             className="object-contain rounded-lg"
-            style={{
-              marginLeft: -13,
-              width: 230,
-              height: 'auto',
-            }}
+            style={{ marginLeft: -13, width: 230, height: 'auto' }}
           />
           <Navigation textColor="white" noActiveState={true} />
         </motion.div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="w-full lg:w-[67%] flex flex-col lg:h-screen overflow-x-hidden">
-        {/* Centered Heading at the very top */}
-        <div className="w-full flex justify-center">
-          <h1
-            className="text-center font-extrabold tracking-wide text-gray-900 drop-shadow-lg"
-            style={{
-              fontFamily: '"Nunito Sans", sans-serif',
-              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-              letterSpacing: '0.08em',
-              marginTop: '2.5rem',
-              marginBottom: '1.5rem',
-              textShadow: '0 2px 16px rgba(0,0,0,0.07)'
-            }}
-          >
-            Project Details
-          </h1>
-        </div>
-        {/* Everything else starts below the heading */}
-        <div className="flex flex-col lg:flex-row w-full h-full">
-          {/* Exterior Section */}
-          {exteriorProjects.length > 0 && (
+        <div className="w-full flex">
+          <div style={{ width: '100%' }} className='flex flex-col justify-center items-center'>
+            <h1
+              ref={titleRef}
+              className="font-light tracking-tight text-gray-900 text-center"
+              style={{
+                fontFamily: 'Coolvetica Extra Light',
+                fontWeight: 300,
+                fontSize: 'clamp(2rem, 7vw, 4.5rem)',
+                letterSpacing: '0.04em',
+                lineHeight: 1.08,
+                marginTop: '2.5rem',
+                marginBottom: '1.5rem',
+                background: 'transparent',
+                width: '90vw',
+                maxWidth: '90vw',
+                left: '0%',
+                position: 'relative',
+                padding: 0,
+                display: 'block',
+                textTransform: 'uppercase',
+                opacity: 0,
+                transform: 'translateY(0)',
+                transition: "all 0.7s cubic-bezier(.77,0,.18,1)",
+                paddingBottom: '1rem',
+              }}
+            />
             <div
-              className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto"
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20  sm:!pt-24 lg:!pt-20 flex justify-center  sm:!mt-16 lg:!mt-0">
-                <div className="flex flex-col items-center">
-                  <motion.div
-                    className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                    style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                  >
-                    {/* Mobile: Show projects horizontally */}
-                    <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                      {exteriorProjects.map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          className="relative flex-shrink-0"
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                        >
-                          {/* EXTERIOR label for mobile */}
-                          {index === 0 && (
-                            <motion.div
-                              className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                            >
-                              EXTERIOR
-                            </motion.div>
-                          )}
-                          <ProjectCard project={project} />
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Desktop: Show projects vertically */}
-                    <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                      {exteriorProjects.map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          className="relative"
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                        >
-                          {/* EXTERIOR label for desktop */}
-                          {index === 0 && (
-                            <motion.div
-                              className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
-                              style={{ transformOrigin: 'center' }}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                            >
-                              EXTERIOR
-                            </motion.div>
-                          )}
-                          <ProjectCard project={project} />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
+              ref={lineRef}
+              style={{
+                opacity: 1,
+                zIndex: 10,
+                width: '100vw',
+                maxWidth: '100vw',
+                height: '1px',
+                background: '#222',
+                left: '50%',
+                transform: 'translateX(-50%) scaleX(0)',
+                transformOrigin: 'left center',
+                position: 'relative',
+                marginBottom: '1.5rem',
+                transition: "transform 1.3s cubic-bezier(.77,0,.18,1), opacity 0.7s cubic-bezier(.77,0,.18,1)"
+              }}
+            />
+          </div>
+        </div>
+        {showSections && (
+          <div className="flex flex-col lg:flex-row w-full h-full">
+            {/* Exterior Section */}
+            {exteriorProjects.length > 0 && (
+              <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto">
+                <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 sm:!pt-24 lg:!pt-20 flex justify-center sm:!mt-16 lg:!mt-0">
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
+                      style={{ marginTop: '2rem sm:3rem lg:4rem' }}
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.8, delay: 0.4 }}
+                    >
+                      <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
+                        {exteriorProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            className="relative flex-shrink-0"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                          >
+                            {index === 0 && (
+                              <motion.div
+                                className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                              >
+                                EXTERIOR
+                              </motion.div>
+                            )}
+                            <ProjectCard project={project} />
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="hidden lg:flex lg:flex-col items-center gap-16">
+                        {exteriorProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            className="relative"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                          >
+                            {index === 0 && (
+                              <motion.div
+                                className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
+                                style={{ transformOrigin: 'center' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                              >
+                                EXTERIOR
+                              </motion.div>
+                            )}
+                            <ProjectCard project={project} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Interior Section */}
-          {interiorProjects.length > 0 && (
-            <div
-              className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
-                <div className="flex flex-col items-center">
-                  <motion.div
-                    className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                    style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                  >
-                    {/* Mobile: Show projects horizontally */}
-                    <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                      {interiorProjects.map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          className="relative flex-shrink-0"
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                        >
-                          {/* INTERIOR label for mobile */}
-                          {index === 0 && (
-                            <motion.div
-                              className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                            >
-                              INTERIOR
-                            </motion.div>
-                          )}
-                          <ProjectCard project={project} />
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Desktop: Show projects vertically */}
-                    <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                      {interiorProjects.map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          className="relative"
-                          initial={{ opacity: 0, y: 30 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
-                          style={{
-                            animationDelay: `${index * 0.1}s`,
-                            animation: `fadeInUp 0.6s ease-out forwards`,
-                            opacity: 0
-                          }}
-                        >
-                          {/* INTERIOR label for desktop */}
-                          {index === 0 && (
-                            <motion.div
-                              className="absolute left-[-90px] top-6 sm:top-8 text-xs tracking-[0.3em] text-black font-bold transform -rotate-90"
-                              style={{ transformOrigin: 'center' }}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                            >
-                              INTERIOR
-                            </motion.div>
-                          )}
-                          <ProjectCard project={project} />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
+            )}
+            {/* Interior Section */}
+            {interiorProjects.length > 0 && (
+              <div className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}>
+                <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
+                      style={{ marginTop: '2rem sm:3rem lg:4rem' }}
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.8, delay: 0.4 }}
+                    >
+                      <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
+                        {interiorProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            className="relative flex-shrink-0"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                          >
+                            {index === 0 && (
+                              <motion.div
+                                className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                              >
+                                INTERIOR
+                              </motion.div>
+                            )}
+                            <ProjectCard project={project} />
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="hidden lg:flex lg:flex-col items-center gap-16">
+                        {interiorProjects.map((project, index) => (
+                          <motion.div
+                            key={project.id}
+                            className="relative"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
+                          >
+                            {index === 0 && (
+                              <motion.div
+                                className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
+                                style={{ transformOrigin: 'center' }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                              >
+                                INTERIOR
+                              </motion.div>
+                            )}
+                            <ProjectCard project={project} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {/* Custom scrollbar styles */}
+      {modalImages && (
+        <ImageModal images={modalImages} onClose={() => setModalImages(null)} />
+      )}
       <style jsx>{`
-        .border-r {
-          border-right: 1px solid #d1d5db;
+        .border-r { border-right: 1px solid #d1d5db; }
+        .overflow-y-auto::-webkit-scrollbar, .overflow-x-auto::-webkit-scrollbar { display: none; }
+        .overflow-y-auto, .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+        .typing-indicator {
+          display: inline-block;
+          width: 1ch;
+          color: #222;
+          font-weight: 400;
+          animation: blink 0.8s steps(1) infinite;
         }
-
-        .overflow-y-auto::-webkit-scrollbar,
-        .overflow-x-auto::-webkit-scrollbar {
-          display: none;
-        }
-
-        .overflow-y-auto,
-        .overflow-x-auto {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        /* Prevent any scrolling on the left sidebar for desktop */
-        @media (min-width: 1024px) {
-          .lg\\:w-\\[33\\%\\] {
-            overflow: hidden !important;
-          }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
         }
       `}</style>
     </div>

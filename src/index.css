@@ -1,6 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* Add Coolvetica Extra Light font-face */
+@font-face {
+  font-family: 'Coolvetica Extra Light';
+  src: url('/fonts/CoolveticaEl-Regular.woff2') format('woff2'),
+       url('/fonts/CoolveticaEl-Regular.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   margin: 0;
   padding: 0;

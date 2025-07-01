@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { navigationItems } from '../data/projects';
 
-const Navigation = ({ textColor = 'white', noActiveState = false }) => {
+const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = false }) => {
   const [activeItem, setActiveItem] = useState('');
   const location = useLocation();
 
@@ -11,7 +11,7 @@ const Navigation = ({ textColor = 'white', noActiveState = false }) => {
   useEffect(() => {
     if (noActiveState) {
       setActiveItem(''); // No active state
-      return;
+      return; 
     }
 
     const currentPath = location.pathname;
@@ -59,26 +59,30 @@ const Navigation = ({ textColor = 'white', noActiveState = false }) => {
 
   return (
     <motion.nav 
-      className="z-50"
+      className={`z-50 ${horizontal ? 'w-auto' : ''}`}
       initial={{ opacity: 0, x: -30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8, delay: 0.5 }}
     >
-      <div className="flex flex-col space-y-6">
+      <div className={
+        horizontal
+          ? "flex flex-row gap-8 md:gap-12 lg:gap-16 xl:gap-20" // Use gap utilities for horizontal spacing
+          : "flex flex-col space-y-6"
+      }>
         {navigationItems.map((item, index) => {
           const isActive = !noActiveState && activeItem === item.name;
 
-          const commonClasses = `group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative pl-6 focus:outline-none ${getTextClasses()}`;
+          const commonClasses = `group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative pl-6 focus:outline-none ${getTextClasses()} ${horizontal ? 'pl-0' : ''}`;
 
           const linkContent = (
             <>
               {/* Active line - only show if not noActiveState */}
               {isActive && (
                 <motion.div
-                  className={`absolute -left-2 top-1/2 -translate-y-1/2 h-5 w-0.5 ${getIndicatorClasses()}`}
+                  className={`absolute ${horizontal ? '-bottom-2 left-1/2 -translate-x-1/2 w-5 h-0.5' : '-left-2 top-1/2 -translate-y-1/2 h-5 w-0.5'} ${getIndicatorClasses()}`}
                   layoutId="activeIndicator"
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
+                  initial={{ scaleX: horizontal ? 0 : 1, scaleY: horizontal ? 1 : 0 }}
+                  animate={{ scaleX: 1, scaleY: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
@@ -86,14 +90,19 @@ const Navigation = ({ textColor = 'white', noActiveState = false }) => {
               {/* Hover line */}
               {!isActive && (
                 <motion.div
-                  className={`absolute -left-2 top-1/2 -translate-y-1/2 h-5 w-0.5 ${getHoverIndicatorClasses()} opacity-0 group-hover:opacity-100`}
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
+                  className={`absolute ${horizontal ? '-bottom-2 left-1/2 -translate-x-1/2 w-5 h-0.5' : '-left-2 top-1/2 -translate-y-1/2 h-5 w-0.5'} ${getHoverIndicatorClasses()} opacity-0 group-hover:opacity-100`}
+                  initial={{ scaleX: horizontal ? 0 : 1, scaleY: horizontal ? 1 : 0 }}
+                  animate={{ scaleX: 1, scaleY: 1 }}
                   transition={{ duration: 0.2 }}
                 />
               )}
 
-              {item.name}
+              <span style={{ fontVariant: 'small-caps', fontSize: '1.18em', fontFamily: 'inherit' }}>
+                {item.name.charAt(0).toUpperCase()}
+                <span style={{ fontSize: '0.72em', fontVariant: 'normal' }}>
+                  {item.name.slice(1).toLowerCase()}
+                </span>
+              </span>
             </>
           );
 
@@ -101,8 +110,8 @@ const Navigation = ({ textColor = 'white', noActiveState = false }) => {
             <motion.div
               key={item.name}
               className="relative"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: horizontal ? 0 : -20, y: horizontal ? -20 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
             >
               {item.href.startsWith('#') ? (

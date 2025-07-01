@@ -8,6 +8,7 @@ import Loader from './components/Loader';
 import { usePageLoader } from './hooks/usePageLoader';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
+import Contact from './pages/Contact'
 
 function AppContent() {
   const { isLoading } = usePageLoader();
@@ -18,8 +19,6 @@ function AppContent() {
       <AnimatePresence mode="wait">
         {isLoading && <Loader key="loader" isLoading={isLoading} />}
       </AnimatePresence>
-      
-      {/* Page content with entrance animation */}
       <AnimatePresence mode="wait">
         {!isLoading && (
           <motion.div
@@ -27,10 +26,10 @@ function AppContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: "easeOut",
-              delay: 0.1 // Small delay to ensure loader has fully exited
+              delay: 0.1
             }}
           >
             <Routes location={location}>
@@ -38,6 +37,7 @@ function AppContent() {
               <Route path="/about" element={<About />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/project/:id" element={<ProjectDetail />} />
+              <Route path="/contact" element={<Contact />} />
               {/* Add a catch-all route for debugging */}
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
