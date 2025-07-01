@@ -1,15 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { TextPlugin } from 'gsap/TextPlugin';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import Navigation from '../components/Navigation';
 import { allProjects } from '../data/projects';
 import '../App.css';
-
-gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
 const PROJECTS_PER_LOAD = 11;
 const HEIGHTS = [283, 568];
@@ -23,203 +17,51 @@ function Projects() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingSkeletons, setLoadingSkeletons] = useState([]);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
+  const [activeTypes, setActiveTypes] = useState([]); // Change activeType to an array for multi-select
 
   const navigate = useNavigate();
   const titleRef = useRef(null);
   const lineRef = useRef(null);
-  const sidebarRef = useRef(null);
   const mobileNavRef = useRef(null);
   const projectsGridRef = useRef(null);
-  const tlRef = useRef(null);
   const containerRef = useRef(null);
 
-  const projects = useMemo(() => allProjects, []);
-
-  // GSAP Page Load Animation (Typing effect preserved)
-  useEffect(() => {
-    const tl = gsap.timeline();
-    tlRef.current = tl;
-    const isMobile = window.innerWidth < 1024;
-    const headingYStart = isMobile ? 80 : window.innerHeight / 2 - 120;
-    const headingYEnd = isMobile ? 20 : 0;
-
-    gsap.set([titleRef.current, lineRef.current], { opacity: 0 });
-    gsap.set(titleRef.current, { y: headingYStart, scale: 1 });
-
-    if (isMobile) {
-      tl.to(titleRef.current, {
-        opacity: 1,
-        y: headingYEnd,
-        duration: 0.9,
-        ease: "power3.out",
-        onStart: () => { if (titleRef.current) titleRef.current.textContent = "A Glimpse into Our Projects"; },
-        onComplete: () => {
-          gsap.fromTo(
-            lineRef.current,
-            { opacity: 1, scaleX: 0, transformOrigin: "left center" },
-            {
-              scaleX: 1,
-              duration: 1.3,
-              ease: "power3.inOut",
-              onComplete: () => setShowGrid(true)
-            }
-          );
-        }
-      });
-    } else {
-      tl.to(titleRef.current, {
-        opacity: 1,
-        y: headingYStart,
-        duration: 0.7,
-        ease: "power3.out",
-        onStart: () => { if (titleRef.current) titleRef.current.textContent = ""; },
-        onComplete: () => {
-          gsap.to(titleRef.current, {
-            duration: 1.3,
-            text: { value: "A Glimpse into Our Projects", delimiter: "", speed: 0.5 },
-            ease: "none",
-            onUpdate: () => {
-              if (titleRef.current) {
-                titleRef.current.innerHTML = titleRef.current.textContent + '<span class="typing-indicator">|</span>';
-              }
-            },
-            onComplete: () => {
-              if (titleRef.current) titleRef.current.innerHTML = titleRef.current.textContent;
-              gsap.to(titleRef.current, {
-                y: headingYEnd,
-                duration: 0.9,
-                ease: "power3.inOut",
-                onComplete: () => {
-                  gsap.fromTo(
-                    lineRef.current,
-                    { opacity: 1, scaleX: 0, transformOrigin: "left center" },
-                    {
-                      scaleX: 1,
-                      duration: 1.3,
-                      ease: "power3.inOut",
-                      onComplete: () => setShowGrid(true)
-                    }
-                  );
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
-    if (mobileNavRef.current) {
-      gsap.fromTo(
-        mobileNavRef.current,
-        { scale: 0, rotation: -180, opacity: 0 },
-        { scale: 1, rotation: 0, opacity: 1, duration: 0.8, ease: "back.out(1.7)", delay: 0.5 }
-      );
-    }
-
-    return () => {
-      tlRef.current && tlRef.current.kill();
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
+  // Get all unique types from projects (only those that actually exist)
+  const allTypes = useMemo(() => {
+    const types = new Set();
+    allProjects.forEach(p => {
+      if (p.type) types.add(p.type);
+    });
+    return ["All", ...Array.from(types)];
   }, []);
 
-  // Animate projects on load and scroll
+  // Filtered projects based on activeTypes (filter by type only)
+  const filteredProjects = useMemo(() => {
+    if (
+      activeTypes.length === 0 ||
+      activeTypes.includes("All")
+    ) {
+      return allProjects;
+    }
+    return allProjects.filter(
+      p => p.type && activeTypes.includes(p.type)
+    );
+  }, [activeTypes]);
+
+  // Initial load (no animation)
   useEffect(() => {
-    if (!displayedProjects.length) return;
-    const projectElements = document.querySelectorAll('.project-item');
-    projectElements.forEach((el, index) => {
-      if (!el.classList.contains('animated')) {
-        const delay = (index % PROJECTS_PER_LOAD) * 0.1;
-        gsap.fromTo(el,
-          { opacity: 0, y: 60, scale: 0.8, rotation: Math.random() * 10 - 5 },
-          {
-            opacity: 1, y: 0, scale: 1, rotation: 0,
-            duration: 0.8, delay, ease: "power3.out",
-            onComplete: () => el.classList.add('animated')
-          }
-        );
-      }
-    });
-  }, [displayedProjects, columns]);
-
-  // Skeleton loading animation
-  useEffect(() => {
-    if (!loadingSkeletons.length) return;
-    const skeletonElements = document.querySelectorAll('.loading-skeleton');
-    skeletonElements.forEach((el, index) => {
-      gsap.to(el, {
-        opacity: 0.5, duration: 1, repeat: -1, yoyo: true, ease: "power2.inOut", delay: index * 0.1
-      });
-      const shimmer = el.querySelector('.shimmer-effect');
-      shimmer && gsap.to(shimmer, { x: '100%', duration: 1.5, repeat: -1, ease: "power2.inOut" });
-    });
-  }, [loadingSkeletons]);
-
-  // Scroll-triggered animations
-  useEffect(() => {
-    if (!sidebarRef.current) return;
-    gsap.to(sidebarRef.current, {
-      backgroundPosition: '50% 100%',
-      ease: 'none',
-      scrollTrigger: {
-        trigger: sidebarRef.current,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true
-      }
-    });
-
-    ScrollTrigger.batch('.project-item', {
-      onEnter: (elements) => {
-        elements.forEach((el, i) => {
-          const randomRotation = gsap.utils.random(-18, 18, 1);
-          gsap.fromTo(
-            el,
-            { opacity: 0, y: 80, scale: 0.8, rotate: randomRotation, filter: "blur(8px)" },
-            {
-              opacity: 1, y: 0, scale: 1, rotate: 0, filter: "blur(0px)",
-              duration: 1.1, ease: "expo.out", delay: i * 0.08
-            }
-          );
-        });
-      },
-      onLeave: (elements) => {
-        gsap.to(elements, {
-          opacity: 0.5, scale: 0.95, filter: "blur(4px)", duration: 0.4, stagger: 0.05
-        });
-      },
-      onEnterBack: (elements) => {
-        elements.forEach((el, i) => {
-          gsap.to(el, {
-            opacity: 1, y: 0, scale: 1, rotate: 0, filter: "blur(0px)",
-            duration: 0.7, ease: "expo.out", delay: i * 0.06
-          });
-        });
-      },
-      onLeaveBack: (elements) => {
-        gsap.to(elements, {
-          opacity: 0, y: 60, scale: 0.8, filter: "blur(8px)", duration: 0.5, stagger: 0.05
-        });
-      }
-    });
-
-    return () => ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-  }, []);
-
-  // Initial load
-  useEffect(() => {
-    setDisplayedProjects(projects.slice(0, PROJECTS_PER_LOAD));
-    setHasMore(projects.length > PROJECTS_PER_LOAD);
-  }, [projects]);
+    setDisplayedProjects(filteredProjects.slice(0, PROJECTS_PER_LOAD));
+    setHasMore(filteredProjects.length > PROJECTS_PER_LOAD);
+  }, [filteredProjects]);
 
   // Load more projects
   const loadMoreProjects = useCallback(() => {
     if (isLoading || !hasMore) return;
     setIsLoading(true);
     const currentLength = displayedProjects.length;
-    const remainingProjects = projects.length - currentLength;
+    const remainingProjects = filteredProjects.length - currentLength;
     const projectsToLoad = Math.min(PROJECTS_PER_LOAD, remainingProjects);
-    const nextProjects = projects.slice(currentLength, currentLength + projectsToLoad);
+    const nextProjects = filteredProjects.slice(currentLength, currentLength + projectsToLoad);
 
     if (!nextProjects.length) {
       setIsLoading(false);
@@ -241,11 +83,11 @@ function Projects() {
 
     setTimeout(() => {
       setDisplayedProjects(prev => [...prev, ...nextProjects]);
-      setHasMore(currentLength + nextProjects.length < projects.length);
+      setHasMore(currentLength + nextProjects.length < filteredProjects.length);
       setIsLoading(false);
       setLoadingSkeletons([]);
     }, 800);
-  }, [displayedProjects.length, projects, isLoading, hasMore]);
+  }, [displayedProjects.length, filteredProjects, isLoading, hasMore]);
 
   // Scroll detection
   useEffect(() => {
@@ -330,221 +172,230 @@ function Projects() {
     </div>
   );
 
+  // --- Filter Bar logic ---
+  const handleTypeClick = (type) => {
+    if (type === "All") {
+      setActiveTypes([]);
+    } else {
+      setActiveTypes((prev) => {
+        // If already selected, remove it (toggle)
+        if (prev.includes(type)) {
+          const next = prev.filter((t) => t !== type);
+          // If none left, fallback to All
+          return next.length === 0 ? [] : next;
+        }
+        // Add new type, remove "All" if present
+        return [...prev.filter((t) => t !== "All"), type];
+      });
+    }
+  };
+
+  const handleRemoveType = (type) => {
+    setActiveTypes((prev) => {
+      const next = prev.filter((t) => t !== type);
+      // If none left, fallback to All
+      return next.length === 0 ? [] : next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
-      {/* Animated Mobile Navigation Circle */}
-      <motion.button
+      {/* Mobile Navigation Button (no animation) */}
+      <button
         ref={mobileNavRef}
         className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
         onClick={() => setShowMobileNav(true)}
         aria-label="Open navigation"
-        whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
-        whileTap={{ scale: 0.95, rotate: -10 }}
-        initial={{ opacity: 0, y: -20, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        <motion.span
-          initial={{ rotate: 0 }}
-          animate={{ rotate: showMobileNav ? 90 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
+        <span>
           <FaBars className="text-2xl text-gray-800" />
-        </motion.span>
-      </motion.button>
+        </span>
+      </button>
 
-      {/* Animated Mobile Navigation Overlay */}
-      <AnimatePresence>
-        {showMobileNav && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: "easeInOut" }}
+      {/* Mobile Navigation Overlay (no animation) */}
+      {showMobileNav && (
+        <div
+          className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
+        >
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+            onClick={() => setShowMobileNav(false)}
+            aria-label="Close navigation"
           >
-            <motion.button
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-              onClick={() => setShowMobileNav(false)}
-              aria-label="Close navigation"
-              whileHover={{ scale: 1.15, rotate: 90 }}
-              whileTap={{ scale: 0.92, rotate: -90 }}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              <span className="text-2xl text-gray-800">&times;</span>
-            </motion.button>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 30 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <Navigation textColor="black" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Left Sidebar */}
-      <div
-        ref={sidebarRef}
-        className="hidden lg:flex lg:w-[30%] lg:h-screen flex-col relative bg-cover bg-bottom bg-no-repeat"
-        style={{
-          backgroundImage: "url('/images/pb1.jpg')",
-          willChange: "transform, opacity"
-        }}
-      >
-        <div className="p-4 sm:p-8 lg:p-12 absolute top-4 sm:top-6 lg:top-8 left-4 sm:left-6 lg:left-8 z-50">
-          <img
-            src="/logofullw.png"
-            alt="StudioDesignPalette Logo"
-            className="object-contain rounded-lg"
-            style={{
-              marginLeft: -13,
-              width: 230,
-              height: 'auto',
-            }}
-          />
-          <Navigation textColor="white" />
+            <span className="text-2xl text-gray-800">&times;</span>
+          </button>
+          <div>
+            <Navigation textColor="black" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content - Masonry Grid */}
       <div
-        className="flex justify-center lg:justify-start lg:w-[85%] lg:h-screen  overflow-y-auto overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center"
+        className="flex justify-center lg:justify-start lg:w-[100%] lg:h-screen  overflow-y-auto  ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center"
         ref={containerRef}
         style={{ willChange: "transform, opacity" }}
       >
         <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]">
-          {/* Heading with typing and slide-up animation */}
+          {/* Heading */}
           <div
-            className="relative flex flex-col items-center justify-center w-full !mb-8 sm:!mb-10 lg:!mb-12 transition-all duration-700"
+            className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
             style={{
               position: "relative",
               width: "100%",
               background: "transparent",
               zIndex: 10,
+              marginTop: "2.5rem",
+              marginLeft: "0.5rem",
             }}
           >
             <h1
               ref={titleRef}
-              className="font-light tracking-tight text-gray-900"
+              className="font-light tracking-tight text-gray-900 lowercase !mb-4 !mt-5"
               style={{
-                fontFamily: 'Coolvetica Extra Light',
-                fontWeight: 300,
-                fontSize: 'clamp(2rem, 7vw, 4.5rem)',
-                letterSpacing: '0.04em',
+                fontWeight: 700,
+                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
+                letterSpacing: '0.1em',
                 lineHeight: 1.08,
-                marginBottom: '0.5rem',
+                marginBottom: '0.2rem',
                 background: 'transparent',
-                width: '90vw',
+                width: 'auto',
                 maxWidth: '90vw',
-                textAlign: 'center',
-                textTransform: 'uppercase',
+                textAlign: 'left',
                 zIndex: 70,
                 color: '#111',
-                transition: "all 0.7s cubic-bezier(.77,0,.18,1)",
                 opacity: 1,
-                transform: 'translateY(0)',
+                transform: 'translateX(0px)',
+                paddingLeft: 0,
               }}
             >
-              A Glimpse into Our Projects
+              projects
             </h1>
             <div
               ref={lineRef}
-              className="!mt-4"
+              className="!mt-1"
               style={{
                 opacity: 1,
                 zIndex: 10,
-                width: '100vw',
+                width: '23%',                // full width underline
                 maxWidth: '100vw',
-                height: '1px',
+                height: '1px',                // thinnest possible
                 background: '#222',
-                left: '50%',
-                transform: 'translateX(-50%) scaleX(0)',
+                left: 0,
+                transform: 'scaleX(1)',
                 transformOrigin: 'left center',
                 position: 'relative',
-                transition: "opacity 0.7s cubic-bezier(.77,0,.18,1)"
+                marginLeft: 0,
+                borderRadius: '1px',
               }}
             />
           </div>
-          {/* Show grid only after heading animation */}
-          {showGrid && (
-            <div ref={projectsGridRef} className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden !mt-7 md:!mt-20 lg:!mt-0">
-              {columns.map((column, columnIndex) => (
-                <div key={`column-${columnIndex}`} className="flex-1 flex flex-col gap-2 sm:gap-3 lg:gap-4 min-w-0">
-                  {column.map((item, itemIndex) => {
-                    if (item.isSkeleton) {
-                      return (
-                        <LoadingSkeleton
-                          key={`${item.id}-${columnIndex}-${itemIndex}`}
-                          height={item.height}
-                          isLarge={item.isLarge}
-                        />
-                      );
-                    }
+          {/* Filter Bar */}
+          <div className="flex flex-wrap gap-2 !mb-6">
+            {allTypes.map((type) => {
+              const isActive = activeTypes.length === 0
+                ? type === "All"
+                : activeTypes.includes(type);
+              return (
+                <button
+                  key={type}
+                  className={`relative flex items-center !px-4 py-1 rounded-full border text-2xl font-medium transition-colors
+                    ${isActive
+                      ? 'bg-black text-white border-white'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}
+                  `}
+                  onClick={() => handleTypeClick(type)}
+                  type="button"
+                >
+                  <span>{type}</span>
+                  {type !== "All" && isActive && (
+                    <span
+                      className="!ml-2 flex items-center justify-center w-5 h-5 rounded-full bg-white text-black border border-gray-300 hover:bg-gray-200 transition-colors"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveType(type);
+                      }}
+                      title="Remove filter"
+                    >
+                      <FaTimes size={12} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* Show grid */}
+          <div ref={projectsGridRef} className="flex gap-2 sm:gap-3 lg:gap-4 overflow-x-hidden !mt-7 md:!mt-20 lg:!mt-0">
+            {columns.map((column, columnIndex) => (
+              <div key={`column-${columnIndex}`} className="flex-1 flex flex-col gap-2 sm:gap-3 lg:gap-4 min-w-0">
+                {column.map((item, itemIndex) => {
+                  if (item.isSkeleton) {
                     return (
-                      <div
+                      <LoadingSkeleton
                         key={`${item.id}-${columnIndex}-${itemIndex}`}
-                        className={`cursor-pointer group project-item ${item.isLarge ? 'mb-1 sm:mb-2' : 'mb-1 sm:mb-2'} w-full max-w-full`}
-                        onClick={() => navigate(`/project/${item.id}`)}
-                      >
-                        <div className={`relative overflow-hidden shadow-sm group-hover:shadow-lg transition-all duration-300 bg-gradient-to-br w-full ${
-                          item.isLarge
-                            ? 'from-gray-100 to-gray-200 shadow-md'
-                            : 'from-gray-50 to-gray-100 shadow-sm'
-                        }`}>
-                          {/* Project Image */}
-                          <div
-                            className="lg:w-full !sm:max-w-[70%] relative overflow-hidden object-cover object-center"
-                            style={{
-                              height: `${item.height}px`,
-                              minHeight: '150px',
+                        height={item.height}
+                        isLarge={item.isLarge}
+                      />
+                    );
+                  }
+                  return (
+                    <div
+                      key={`${item.id}-${columnIndex}-${itemIndex}`}
+                      className={`cursor-pointer group project-item ${item.isLarge ? 'mb-1 sm:mb-2' : 'mb-1 sm:mb-2'} w-full max-w-full`}
+                      onClick={() => navigate(`/project/${item.id}`)}
+                    >
+                      <div className={`relative overflow-hidden shadow-sm group-hover:shadow-lg transition-all duration-300 bg-gradient-to-br w-full ${
+                        item.isLarge
+                          ? 'from-gray-100 to-gray-200 shadow-md'
+                          : 'from-gray-50 to-gray-100 shadow-sm'
+                      }`}>
+                        {/* Project Image */}
+                        <div
+                          className="lg:w-full !sm:max-w-[70%] relative overflow-hidden object-cover object-center"
+                          style={{
+                            height: `${item.height}px`,
+                            minHeight: '150px',
+                          }}
+                        >
+                          <img
+                            className="absolute inset-0 w-full h-full object-contain object-center transition-all duration-500 opacity-0 image-fade-in"
+                            src={item.mainImage || item.image}
+                            alt={item.title}
+                            loading="lazy"
+                            onLoad={(e) => {
+                              e.target.classList.add('loaded');
                             }}
-                          >
-                            <img
-                              className="absolute inset-0 w-full h-full object-contain object-center transition-all duration-500 opacity-0 image-fade-in"
-                              src={item.mainImage || item.image}
-                              alt={item.title}
-                              loading="lazy"
-                              onLoad={(e) => {
-                                e.target.classList.add('loaded');
-                              }}
-                            />
-                            <img
-                              className="absolute inset-0 w-full h-full object-contain object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                              src={item.hoverImage || item.mainImage || item.image}
-                              alt={item.title}
-                              loading="lazy"
-                            />
-                          </div>
-                          <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-95 transition-all duration-300 flex items-center justify-end">
-                            <div className="text-black flex justify-start flex-col bg-white w-[90%] h-16 sm:h-18 lg:h-20 transform translate-x-full group-hover:translate-x-0 transition-all duration-300 px-3 sm:px-4 lg:px-6 items-center">
-                              <p className="text-gray-500 text-xs sm:text-sm !mt-2 sm:!mt-3 font-light tracking-wide mb-1" style={{ fontFamily: '"Nunito Sans", sans-serif' }}>
-                                {item.type}
-                              </p>
-                              <h3 className={`font-extrabold tracking-wide text-black ${item.isLarge ? 'text-lg sm:text-xl lg:text-2xl' : 'text-base sm:text-lg lg:text-xl'}`} style={{ fontFamily: '"Nunito Sans", sans-serif' }}>
-                                {item.title}
-                              </h3>
-                            </div>
+                          />
+                          <img
+                            className="absolute inset-0 w-full h-full object-contain object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            src={item.hoverImage || item.mainImage || item.image}
+                            alt={item.title}
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-95 transition-all duration-300 flex items-center justify-end">
+                          <div className="text-black flex justify-start flex-col bg-white w-[90%] h-16 sm:h-18 lg:h-20 transform translate-x-full group-hover:translate-x-0 transition-all duration-300 px-3 sm:px-4 lg:px-6 items-center">
+                            <p className="text-gray-500 text-xs sm:text-sm !mt-2 sm:!mt-3 font-light tracking-wide mb-1">
+                              {item.type}
+                            </p>
+                            <h3 className={`font-extrabold tracking-wide text-black ${item.isLarge ? 'text-lg sm:text-xl lg:text-2xl' : 'text-base sm:text-lg lg:text-xl'}`} style={{ letterSpacing: '0.1em' }}>
+                              {item.title}
+                            </h3>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
           {hasMore && !isLoading && displayedProjects.length > 0 && (
             <div className="text-center py-4 sm:py-6 lg:py-8"></div>
           )}
-          {!hasMore && displayedProjects.length === projects.length && (
+          {!hasMore && displayedProjects.length === filteredProjects.length && (
             <div className="text-center py-4 sm:py-6 lg:py-8">
-              <p className="text-gray-600 font-medium text-sm sm:text-base">All {projects.length} projects loaded</p>
+              <p className="text-gray-600 font-medium text-sm sm:text-base">All {filteredProjects.length} projects loaded</p>
             </div>
           )}
         </div>
@@ -586,15 +437,7 @@ function Projects() {
           animation: shimmer 1.5s infinite;
         }
         .typing-indicator {
-          display: inline-block;
-          width: 1ch;
-          color: #222;
-          font-weight: 400;
-          animation: blink 0.8s steps(1) infinite;
-        }
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+          display: none;
         }
       `}</style>
     </div>

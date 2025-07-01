@@ -11,6 +11,8 @@ function Contact() {
   const socialRefs = useRef([])
   const leftRef = useRef(null)
   const rightRef = useRef(null)
+  const titleRef = useRef(null) // <-- ADD THIS LINE
+  const lineRef = useRef(null)  // <-- ADD THIS LINE
   const [errorMsg, setErrorMsg] = useState('')
   const [showMobileNav, setShowMobileNav] = useState(false)
 
@@ -104,15 +106,12 @@ function Contact() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b flex flex-col !p-0 relative overflow-hidden"
+      className="min-h-screen flex flex-col !p-0 relative overflow-hidden bg-white"
       style={{
-        backgroundImage: "url('/background-image.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        // White background only
       }}
     >
-      <div className="absolute inset-0 z-0 bg-black/30 backdrop-blur-[6px] pointer-events-none" />
+      {/* --- Foreground content --- */}
       <div className="relative z-10">
         {/* MOBILE NAV BUTTON */}
         <motion.button
@@ -168,36 +167,88 @@ function Contact() {
           )}
         </AnimatePresence>
         {/* LOGO & NAVIGATION - Only on large screens */}
-        <div className="absolute top-6 left-8 z-40 hidden lg:block">
-          <img src="/logofullw.png" alt="Logo" className="h-40 w-auto object-contain" />
-        </div>
-        <div className="w-full flex justify-center !pt-10 !pb-8 hidden lg:flex">
-          <Navigation textColor="white" horizontal />
-        </div>
-        <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-16 !px-8">
-          <div ref={leftRef} className="flex-1 flex flex-col items-center md:items-start !p-15">
-            <div ref={headingRef} className="text-white text-3xl font-bold tracking-widest mb-8 !mt-0">CONTACT</div>
-            <div className="text-white !mb-10  !mt-0">
+        
+      <div className="flex justify-center lg:justify-start lg:w-[100%] overflow-y-auto  ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center">
+        <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]">
+          {/* Heading */}
+          <div
+            className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
+            style={{
+              position: "relative",
+              width: "100%",
+              background: "transparent",
+              zIndex: 10,
+              marginTop: "2.5rem",
+              marginLeft: "0.5rem",
+            }}
+          >
+            <h1
+              ref={titleRef}
+              className="font-light tracking-tight text-gray-900 lowercase  !mt-5"
+              style={{
+                fontWeight: 700,
+                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
+                letterSpacing: '0.1em',
+                lineHeight: 1.08,
+                marginBottom: '0.2rem',
+                background: 'transparent',
+                width: 'auto',
+                maxWidth: '90vw',
+                textAlign: 'left',
+                zIndex: 70,
+                color: '#111',
+                opacity: 1,
+                transform: 'translateX(0px)',
+                paddingLeft: 0,
+              }}
+            >
+              contact us
+            </h1>
+            <div
+              ref={lineRef}
+              className="!mt-1"
+              style={{
+                opacity: 1,
+                zIndex: 10,
+                width: '27%',
+                maxWidth: '100vw',
+                height: '1px',
+                background: '#222',
+                left: 0,
+                transform: 'scaleX(1)',
+                transformOrigin: 'left center',
+                position: 'relative',
+                marginLeft: 0,
+                borderRadius: '1px',
+              }}
+            />
+          </div>
+          <div
+            ref={leftRef}
+            className="flex-1 flex flex-col items-center md:items-start !p-15 !-mt-5 text-2xl tracking-widest font-semibold"
+          >
+            
+            <div className="text-black !mb-10  !mt-0">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam excepturi et tenetur distinctio numquam similique delectus facilis recusandae quod possimus, sunt deleniti, eum consequuntur rerum non magnam, sed quia? Repellat.50
             </div>
             <div className="mb-8 !mt-0">
-              <div className="uppercase text-white/80 text-xs !mb-1 tracking-widest">address</div>
-              <div className="text-lg text-white">123, Main Street, NY 10030</div>
+              <div className="uppercase text-black/80 text-xs !mb-1 tracking-widest">address</div>
+              <div className="text-lg text-black">123, Main Street, NY 10030</div>
             </div>
             <div className="mb-8 !mt-0">
-              <div className="uppercase text-white/80 text-xs !mb-1 tracking-widest">phone</div>
-              <div className="text-lg text-white">+1 800 123 4567</div>
+              <div className="uppercase text-black/80 text-xs !mb-1 tracking-widest">phone</div>
+              <div className="text-lg text-black">+1 800 123 4567</div>
             </div>
             <div className="mb-8 !mt-0">
-              <div className="uppercase text-white/80 text-xs !mb-1 tracking-widest">e-mail</div>
-              <div className="text-lg text-white">tuba@email.com</div>
+              <div className="uppercase text-black/80 text-xs !mb-1 tracking-widest">e-mail</div>
+              <div className="text-lg text-black">tuba@email.com</div>
             </div>
             <div className="flex flex-row gap-4 mt-12 !mb-0">
               {socialIcons.map((icon, idx) => (
                 <a
                   key={icon.label}
                   href={icon.href}
-                  className="text-white hover:text-white transition text-xl"
+                  className="text-black hover:text-black transition text-xl"
                   aria-label={icon.label}
                   ref={el => (socialRefs.current[idx] = el)}
                 >
@@ -211,13 +262,13 @@ function Contact() {
               ref={formRef}
               className="w-full max-w-3xl bg-white/10 backdrop-blur-[8px] border border-white/20 shadow-2xl !p-14 flex flex-col gap-4"
               style={{
-                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                border: '1.5px solid rgba(255,255,255,0.18)',
-                background: 'rgba(24,25,27,0.55)',
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.13)',
+                border: '1.5px solid rgba(0,0,0,0.08)',
+                background: 'rgba(24,25,27,0.07)',
               }}
               onSubmit={handleSubmit}
             >
-              <div className="text-white text-3xl font-bold tracking-widest mb-4 !mt-0 text-center">CONTACT FORM</div>
+              <div className="text-black text-3xl font-bold tracking-widest mb-4 !mt-0 text-center">CONTACT FORM</div>
               {errorMsg && (
                 <div className="flex justify-center">
                   <div className="bg-[#2c2d31]/80 border border-red-400/40 rounded-lg px-6 py-4 mb-4 shadow-lg flex items-center gap-3 animate-fade-in">
@@ -225,7 +276,7 @@ function Contact() {
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
                     </svg>
-                    <span className="text-red-300 font-semibold text-base !p-4">{errorMsg}</span>
+                    <span className="text-red-300 font-semibold  !p-4 tracking-wider">{errorMsg}</span>
                   </div>
                 </div>
               )}
@@ -234,7 +285,7 @@ function Contact() {
                   key={placeholder}
                   type={placeholder === 'Your e-mail' ? 'email' : 'text'}
                   placeholder={placeholder}
-                  className="bg-transparent border-b border-gray-600 focus:border-gray-600 focus:outline-none text-white !py-5 !px-0 placeholder-white/80 text-lg"
+                  className="bg-transparent border-b border-gray-400 focus:border-gray-600 focus:outline-none text-black !py-5 !px-0 placeholder-black/60 text-lg"
                   ref={el => (inputRefs.current[idx] = el)}
                   onFocus={() => handleFocus(idx)}
                   onBlur={() => handleBlur(idx)}
@@ -243,7 +294,7 @@ function Contact() {
               <textarea
                 placeholder="Message"
                 rows={5}
-                className="bg-transparent border-b border-gray-600 focus:border-gray-600 focus:outline-none text-white !py-5 !px-0 placeholder-white/80 resize-none text-lg"
+                className="bg-transparent border-b border-gray-400 focus:border-gray-600 focus:outline-none text-black !py-5 !px-0 placeholder-black/60 resize-none text-lg"
                 ref={el => (inputRefs.current[3] = el)}
                 onFocus={() => handleFocus(3)}
                 onBlur={() => handleBlur(3)}
@@ -252,7 +303,7 @@ function Contact() {
                 type="submit"
                 className="bg-[#232427]/90 text-white font-bold tracking-widest rounded-lg !py-5 !px-0 mt-4 shadow-md hover:bg-[#111] transition text-lg"
                 style={{
-                  boxShadow: '0 4px 24px 0 rgba(31, 38, 135, 0.18)'
+                  boxShadow: '0 4px 24px 0 rgba(31, 38, 135, 0.08)'
                 }}
               >
                 SEND MESSAGE
@@ -261,6 +312,7 @@ function Contact() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { FaBars } from 'react-icons/fa';
@@ -10,82 +10,24 @@ function ProjectDetail() {
   const { id } = useParams();
   // Convert id to number once
   const numericId = Number(id);
+  const titleRef = useRef(null);
+  const lineRef = useRef(null);
   const [hoveredProject, setHoveredProject] = useState(null);
   const [modalImages, setModalImages] = useState(null);
   const [modalIndex, setModalIndex] = useState(0);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [showSections, setShowSections] = useState(false);
+  const [showSections, setShowSections] = useState(true); // Always show sections, no animation
 
   const currentProject = projects.find(p => p.id === numericId);
   const exteriorProjects = currentProject ? getExteriorProjects(numericId) : [];
   const interiorProjects = currentProject ? getInteriorProjects(numericId) : [];
-
-  // --- Typing Animation Refs ---
-  const titleRef = useRef(null);
-  const lineRef = useRef(null);
-
-  useEffect(() => {
-    if (!titleRef.current || !lineRef.current) return;
-    const isMobile = window.innerWidth < 1024;
-    const headingYStart = isMobile ? 80 : window.innerHeight / 2 - 120;
-    const headingYEnd = isMobile ? 20 : 0;
-
-    titleRef.current.style.opacity = 0;
-    lineRef.current.style.opacity = 0;
-    titleRef.current.style.transform = `translateY(${headingYStart}px)`;
-    titleRef.current.innerText = "";
-
-    setTimeout(() => {
-      titleRef.current.style.transition = "opacity 0.7s cubic-bezier(.77,0,.18,1), transform 0.7s cubic-bezier(.77,0,.18,1)";
-      titleRef.current.style.opacity = 1;
-      titleRef.current.style.transform = `translateY(${headingYStart}px)`;
-
-      if (isMobile) {
-        setTimeout(() => {
-          titleRef.current.innerText = "Project Details";
-          titleRef.current.style.transition = "transform 0.9s cubic-bezier(.77,0,.18,1)";
-          titleRef.current.style.transform = `translateY(${headingYEnd}px)`;
-          lineRef.current.style.opacity = 1;
-          lineRef.current.style.transition = "transform 1.3s cubic-bezier(.77,0,.18,1)";
-          lineRef.current.style.transform = "translateX(-50%) scaleX(1)";
-          setTimeout(() => setShowSections(true), 1300);
-        }, 700);
-      } else {
-        setTimeout(() => {
-          let text = "Project Details";
-          let i = 0;
-          titleRef.current.innerText = "";
-          lineRef.current.style.opacity = 1;
-          function typeWriter() {
-            if (i <= text.length) {
-              titleRef.current.innerHTML = text.slice(0, i) + '<span class="typing-indicator">|</span>';
-              i++;
-              setTimeout(typeWriter, 50);
-            } else {
-              titleRef.current.innerHTML = text;
-              titleRef.current.style.transition = "transform 0.9s cubic-bezier(.77,0,.18,1)";
-              titleRef.current.style.transform = `translateY(${headingYEnd}px)`;
-              lineRef.current.style.transition = "transform 1.3s cubic-bezier(.77,0,.18,1)";
-              lineRef.current.style.transform = "translateX(-50%) scaleX(1)";
-              setTimeout(() => setShowSections(true), 1300);
-            }
-          }
-          typeWriter();
-        }, 700);
-      }
-    }, 100);
-  }, []);
 
   // --- Modal for Images ---
   const ImageModal = ({ images, onClose }) => {
     if (!images) return null;
     const imageList = [{ src: images.main }, { src: images.hover }];
     const [direction, setDirection] = useState(0);
-    const variants = {
-      enter: { opacity: 0, scale: 0.98, position: "absolute" },
-      center: { opacity: 1, scale: 1, position: "relative" },
-      exit: { opacity: 0, scale: 1.02, position: "absolute" }
-    };
+    // Remove animation variants
     const handleNext = (e) => {
       e.stopPropagation();
       setDirection(1);
@@ -97,91 +39,71 @@ function ProjectDetail() {
       setModalIndex((prev) => (prev + imageList.length - 1) % imageList.length);
     };
     return (
-      <AnimatePresence custom={direction}>
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.35, ease: "easeInOut" } }}
-          exit={{ opacity: 0, transition: { duration: 0.25, ease: "easeInOut" } }}
-          style={{ background: "rgba(0,0,0,0.92)", cursor: "pointer" }}
-          onClick={onClose}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: "rgba(0,0,0,0.92)", cursor: "pointer" }}
+        onClick={onClose}
+      >
+        <div
+          className="relative flex items-center justify-center"
+          onClick={e => e.stopPropagation()}
+          style={{
+            width: 'min(90vw, 90vh)',
+            height: 'min(90vw, 90vh)',
+            maxWidth: 800,
+            maxHeight: 800,
+            background: 'transparent',
+            borderRadius: '2rem',
+            boxShadow: 'none',
+            overflow: 'hidden',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
-          <motion.div
-            className="relative flex items-center justify-center"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { duration: 0.35, ease: "easeInOut" } }}
-            exit={{ scale: 0.95, opacity: 0, transition: { duration: 0.25, ease: "easeInOut" } }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: 'min(90vw, 90vh)',
-              height: 'min(90vw, 90vh)',
-              maxWidth: 800,
-              maxHeight: 800,
-              background: 'transparent',
-              borderRadius: '2rem',
-              boxShadow: 'none',
-              overflow: 'hidden',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+          <button
+            className="absolute top-4 right-4 text-gray-400 hover:text-black text-3xl font-bold bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow transition"
+            onClick={onClose}
+            aria-label="Close"
+            style={{ zIndex: 10, backdropFilter: 'blur(4px)', border: 'none', cursor: 'pointer' }}
           >
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-black text-3xl font-bold bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow transition"
-              onClick={onClose}
-              aria-label="Close"
-              style={{ zIndex: 10, backdropFilter: 'blur(4px)', border: 'none', cursor: 'pointer' }}
-            >
-              &times;
-            </button>
-            <button
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
-              onClick={handlePrev}
-              style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
-              aria-label="Previous"
-            >
-              <span style={{ fontWeight: 700, fontSize: 28 }}>&#8592;</span>
-            </button>
-            <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
-              onClick={handleNext}
-              style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
-              aria-label="Next"
-            >
-              <span style={{ fontWeight: 700, fontSize: 28 }}>&#8594;</span>
-            </button>
-            <AnimatePresence custom={direction} mode="wait">
-              <motion.img
-                key={modalIndex}
-                src={imageList[modalIndex].src}
-                alt=""
-                className="object-contain w-full h-full rounded-2xl transition-all duration-300"
-                style={{
-                  background: 'transparent',
-                  boxShadow: '0 4px 32px 0 rgba(0,0,0,0.10)',
-                  cursor: 'default'
-                }}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  opacity: { duration: 0.35, ease: "easeInOut" },
-                  scale: { duration: 0.35, ease: "easeInOut" }
-                }}
-              />
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+            &times;
+          </button>
+          <button
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
+            onClick={handlePrev}
+            style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
+            aria-label="Previous"
+          >
+            <span style={{ fontWeight: 700, fontSize: 28 }}>&#8592;</span>
+          </button>
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
+            onClick={handleNext}
+            style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
+            aria-label="Next"
+          >
+            <span style={{ fontWeight: 700, fontSize: 28 }}>&#8594;</span>
+          </button>
+          <img
+            key={modalIndex}
+            src={imageList[modalIndex].src}
+            alt=""
+            className="object-contain w-full h-full rounded-2xl"
+            style={{
+              background: 'transparent',
+              boxShadow: '0 4px 32px 0 rgba(0,0,0,0.10)',
+              cursor: 'default'
+            }}
+          />
+        </div>
+      </div>
     );
   };
 
   const ProjectCard = ({ project }) => (
-    <motion.div
+    <div
       className="relative cursor-pointer group !mb-8 sm:!mb-12 md:!mb-16"
       onMouseEnter={() => setHoveredProject(project.id)}
       onMouseLeave={() => setHoveredProject(null)}
@@ -189,8 +111,6 @@ function ProjectDetail() {
         setModalImages({ main: project.mainImage, hover: project.hoverImage });
         setModalIndex(0);
       }}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.3 }}
     >
       <div
         className="relative overflow-hidden bg-gray-100 !mb-4"
@@ -201,177 +121,137 @@ function ProjectDetail() {
           maxHeight: '482px'
         }}
       >
-        <motion.img
+        <img
           src={project.mainImage}
           alt={project.title}
           className="w-full h-full object-cover absolute inset-0"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: hoveredProject === project.id ? 0 : 1 }}
-          transition={{ opacity: { duration: 0.6, ease: "easeInOut" } }}
           style={{
+            opacity: hoveredProject === project.id ? 0 : 1,
             transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
-            transition: 'transform 0.6s ease-out'
+            transition: 'none'
           }}
         />
-        <motion.img
+        <img
           src={project.hoverImage}
           alt={project.title}
           className="w-full h-full object-cover absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: hoveredProject === project.id ? 1 : 0 }}
-          transition={{ opacity: { duration: 0.6, ease: "easeInOut" } }}
           style={{
+            opacity: hoveredProject === project.id ? 1 : 0,
             transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
-            transition: 'transform 0.6s ease-out'
+            transition: 'none'
           }}
         />
-        <motion.div
+        <div
           className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: hoveredProject === project.id ? 1 : 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
+          style={{
+            opacity: hoveredProject === project.id ? 1 : 0,
+            transition: 'none'
+          }}
         />
       </div>
-      <motion.div
+      <div
         className="text-left !pt-4 sm:!pt-5 lg:!pt-7"
-        animate={{ y: hoveredProject === project.id ? -3 : 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        style={{
+          transform: hoveredProject === project.id ? 'translateY(-3px)' : 'translateY(0)',
+          transition: 'none'
+        }}
       >
         <h3 className="text-lg sm:text-[20px] font-400 text-gray-900 transition-colors duration-300 group-hover:text-gray-700">
           {project.title}
         </h3>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-x-hidden">
       {/* Mobile Navigation */}
-      <motion.button
+      <button
         className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
         onClick={() => setShowMobileNav(true)}
         aria-label="Open navigation"
-        whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
-        whileTap={{ scale: 0.95, rotate: -10 }}
-        initial={{ opacity: 0, y: -20, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        style={{ transition: 'none' }}
       >
-        <motion.span
-          initial={{ rotate: 0 }}
-          animate={{ rotate: showMobileNav ? 90 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
+        <span>
           <FaBars className="text-2xl text-gray-800" />
-        </motion.span>
-      </motion.button>
-      <AnimatePresence>
-        {showMobileNav && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: "easeInOut" }}
-          >
-            <motion.button
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-              onClick={() => setShowMobileNav(false)}
-              aria-label="Close navigation"
-              whileHover={{ scale: 1.15, rotate: 90 }}
-              whileTap={{ scale: 0.92, rotate: -90 }}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-            >
-              <span className="text-2xl text-gray-800">&times;</span>
-            </motion.button>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 30 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <Navigation textColor="black" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Sidebar */}
-      <div
-        className="hidden lg:flex lg:w-[33%] lg:h-screen flex-col relative overflow-hidden"
-        style={{
-          backgroundImage: "url('/images/pb1.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'bottom',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <motion.div
-          className="p-12 flex-shrink-0 fixed top-8 left-8 z-50"
-          style={{ minWidth: 0, maxWidth: 'calc(33vw - 4rem)' }}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+        </span>
+      </button>
+      {showMobileNav && (
+        <div
+          className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
         >
-          <img
-            src="/logofullw.png"
-            alt="StudioDesignPalette Logo"
-            className="object-contain rounded-lg"
-            style={{ marginLeft: -13, width: 230, height: 'auto' }}
-          />
-          <Navigation textColor="white" noActiveState={true} />
-        </motion.div>
-      </div>
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+            onClick={() => setShowMobileNav(false)}
+            aria-label="Close navigation"
+            style={{ transition: 'none' }}
+          >
+            <span className="text-2xl text-gray-800">&times;</span>
+          </button>
+          <div>
+            <Navigation textColor="black" />
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="w-full lg:w-[67%] flex flex-col lg:h-screen overflow-x-hidden">
+      <div className="w-full lg:w-[100%] flex flex-col lg:h-screen overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center"
+      style={{ willChange: "transform, opacity" }}>
         <div className="w-full flex">
-          <div style={{ width: '100%' }} className='flex flex-col justify-center items-center'>
+          <div className='!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]'>
+            {/* --- New Title and Underline Block --- */}
+            <div
+            className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
+            style={{
+              position: "relative",
+              width: "100%",
+              background: "transparent",
+              zIndex: 10,
+              marginTop: "2.5rem",
+              marginLeft: "0.5rem",
+            }}
+          >
             <h1
               ref={titleRef}
-              className="font-light tracking-tight text-gray-900 text-center"
+              className="font-light tracking-tight text-gray-900 lowercase !mb-4 !mt-5"
               style={{
-                fontFamily: 'Coolvetica Extra Light',
-                fontWeight: 300,
-                fontSize: 'clamp(2rem, 7vw, 4.5rem)',
-                letterSpacing: '0.04em',
+                fontWeight: 700,
+                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
+                letterSpacing: '0.1em',
                 lineHeight: 1.08,
-                marginTop: '2.5rem',
-                marginBottom: '1.5rem',
+                marginBottom: '0.2rem',
                 background: 'transparent',
-                width: '90vw',
+                width: 'auto',
                 maxWidth: '90vw',
-                left: '0%',
-                position: 'relative',
-                padding: 0,
-                display: 'block',
-                textTransform: 'uppercase',
-                opacity: 0,
-                transform: 'translateY(0)',
-                transition: "all 0.7s cubic-bezier(.77,0,.18,1)",
-                paddingBottom: '1rem',
+                textAlign: 'left',
+                zIndex: 70,
+                color: '#111',
+                opacity: 1,
+                transform: 'translateX(0px)',
+                paddingLeft: 0,
               }}
-            />
+            >
+              project details
+            </h1>
             <div
               ref={lineRef}
+              className="!mt-1"
               style={{
                 opacity: 1,
                 zIndex: 10,
-                width: '100vw',
+                width: '38%',                // full width underline
                 maxWidth: '100vw',
-                height: '1px',
+                height: '1px',                // thinnest possible
                 background: '#222',
-                left: '50%',
-                transform: 'translateX(-50%) scaleX(0)',
+                left: 0,
+                transform: 'scaleX(1)',
                 transformOrigin: 'left center',
                 position: 'relative',
-                marginBottom: '1.5rem',
-                transition: "transform 1.3s cubic-bezier(.77,0,.18,1), opacity 0.7s cubic-bezier(.77,0,.18,1)"
+                marginLeft: 0,
+                borderRadius: '1px',
               }}
             />
+          </div>
           </div>
         </div>
         {showSections && (
@@ -381,61 +261,46 @@ function ProjectDetail() {
               <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto">
                 <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 sm:!pt-24 lg:!pt-20 flex justify-center sm:!mt-16 lg:!mt-0">
                   <div className="flex flex-col items-center">
-                    <motion.div
+                    <div
                       className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
                       style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.8, delay: 0.4 }}
                     >
                       <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
                         {exteriorProjects.map((project, index) => (
-                          <motion.div
+                          <div
                             key={project.id}
                             className="relative flex-shrink-0"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
                           >
                             {index === 0 && (
-                              <motion.div
+                              <div
                                 className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.3 }}
                               >
                                 EXTERIOR
-                              </motion.div>
+                              </div>
                             )}
                             <ProjectCard project={project} />
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
                       <div className="hidden lg:flex lg:flex-col items-center gap-16">
                         {exteriorProjects.map((project, index) => (
-                          <motion.div
+                          <div
                             key={project.id}
                             className="relative"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
                           >
                             {index === 0 && (
-                              <motion.div
+                              <div
                                 className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
                                 style={{ transformOrigin: 'center' }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.3 }}
                               >
                                 EXTERIOR
-                              </motion.div>
+                              </div>
                             )}
                             <ProjectCard project={project} />
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -445,61 +310,46 @@ function ProjectDetail() {
               <div className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}>
                 <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
                   <div className="flex flex-col items-center">
-                    <motion.div
+                    <div
                       className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
                       style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.8, delay: 0.4 }}
                     >
                       <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
                         {interiorProjects.map((project, index) => (
-                          <motion.div
+                          <div
                             key={project.id}
                             className="relative flex-shrink-0"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
                           >
                             {index === 0 && (
-                              <motion.div
+                              <div
                                 className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.3 }}
                               >
                                 INTERIOR
-                              </motion.div>
+                              </div>
                             )}
                             <ProjectCard project={project} />
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
                       <div className="hidden lg:flex lg:flex-col items-center gap-16">
                         {interiorProjects.map((project, index) => (
-                          <motion.div
+                          <div
                             key={project.id}
                             className="relative"
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 + index * 0.1 }}
                           >
                             {index === 0 && (
-                              <motion.div
+                              <div
                                 className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
                                 style={{ transformOrigin: 'center' }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.3 }}
                               >
                                 INTERIOR
-                              </motion.div>
+                              </div>
                             )}
                             <ProjectCard project={project} />
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -515,15 +365,7 @@ function ProjectDetail() {
         .overflow-y-auto::-webkit-scrollbar, .overflow-x-auto::-webkit-scrollbar { display: none; }
         .overflow-y-auto, .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
         .typing-indicator {
-          display: inline-block;
-          width: 1ch;
-          color: #222;
-          font-weight: 400;
-          animation: blink 0.8s steps(1) infinite;
-        }
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+          display: none;
         }
       `}</style>
     </div>

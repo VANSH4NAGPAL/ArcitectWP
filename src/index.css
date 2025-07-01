@@ -21,8 +21,11 @@ html {
   scroll-behavior: smooth;
 }
 
+html, body {
+  font-family: 'Coolvetica Extra Light', 'Nunito Sans', sans-serif;
+}
+
 body {
-  font-family: 'Nunito Sans', sans-serif;
   background: #ffffff;
   color: white;
   overflow-x: hidden;
@@ -33,20 +36,21 @@ body {
 
 /* Embla Carousel Styles */
 .embla {
-  overflow: hidden;
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 .embla__container {
   display: flex;
+  width: 100%;
   height: 100%;
 }
 
 .embla__slide {
   flex: 0 0 100%;
   min-width: 0;
-  position: relative;
+  height: 100%;
 }
 
 /* Custom Scrollbar */
