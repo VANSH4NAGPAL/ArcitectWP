@@ -5,7 +5,7 @@ import AdminAuthWrapper from "../components/AdminAuthWrapper";
 
 const EditProject = () => {
   const { docId } = useParams();
-  const { projects, updateProject } = useOutletContext();
+  const { projects, updateProject, deleteProject } = useOutletContext();
   const navigate = useNavigate();
   const project = projects.find((p) => p.docId === docId);
 
@@ -54,6 +54,32 @@ const EditProject = () => {
       }
     );
     return res.data.url;
+  };
+
+  // Helper: delete from ImageKit
+  const deleteFromImageKit = async (imageUrl) => {
+    try {
+      // Extract file ID from ImageKit URL
+      const fileId = imageUrl.split('/').pop().split('?')[0];
+      
+      const auth = await axios.get("/api/auth");
+      
+      await axios.delete(`https://api.imagekit.io/v1/files/${fileId}`, {
+        headers: {
+          Authorization: `Basic ${btoa(import.meta.env.VITE_IMAGEKIT_PRIVATE_KEY + ':')}`,
+        },
+      });
+    } catch (error) {
+      console.error('Error deleting image from ImageKit:', error);
+    }
+  };
+
+  // Helper: delete multiple images from ImageKit
+  const deleteMultipleFromImageKit = async (imageUrls) => {
+    if (!imageUrls || imageUrls.length === 0) return;
+    
+    const deletePromises = imageUrls.map(url => deleteFromImageKit(url));
+    await Promise.allSettled(deletePromises);
   };
 
   const handleChange = (e) => {
@@ -148,24 +174,143 @@ const EditProject = () => {
     }
   };
 
-  const handleRemoveInteriorImage = (idx) => {
-    setFormData((prev) => ({
+  // Add loading states for image removal
+  const [removingImages, setRemovingImages] = useState({
+    cover: false,
+    interior: {},
+    exterior: {}
+  });
+
+  const handleRemoveInteriorImage = async (idx) => {
+    setRemovingImages(prev => ({
       ...prev,
-      interiorImages: prev.interiorImages.filter((_, i) => i !== idx),
+      interior: { ...prev.interior, [idx]: true }
     }));
+
+    try {
+      const imageUrl = formData.interiorImages[idx];
+      
+      // Delete from ImageKit
+      if (imageUrl) {
+        await deleteFromImageKit(imageUrl);
+      }
+      
+      // Remove from local state
+      setFormData((prev) => ({
+        ...prev,
+        interiorImages: prev.interiorImages.filter((_, i) => i !== idx),
+      }));
+    } catch (error) {
+      console.error('Error removing interior image:', error);
+    } finally {
+      setRemovingImages(prev => ({
+        ...prev,
+        interior: { ...prev.interior, [idx]: false }
+      }));
+    }
   };
-  const handleRemoveExteriorImage = (idx) => {
-    setFormData((prev) => ({
+
+  const handleRemoveExteriorImage = async (idx) => {
+    setRemovingImages(prev => ({
       ...prev,
-      exteriorImages: prev.exteriorImages.filter((_, i) => i !== idx),
+      exterior: { ...prev.exterior, [idx]: true }
     }));
+
+    try {
+      const imageUrl = formData.exteriorImages[idx];
+      
+      // Delete from ImageKit
+      if (imageUrl) {
+        await deleteFromImageKit(imageUrl);
+      }
+      
+      // Remove from local state
+      setFormData((prev) => ({
+        ...prev,
+        exteriorImages: prev.exteriorImages.filter((_, i) => i !== idx),
+      }));
+    } catch (error) {
+      console.error('Error removing exterior image:', error);
+    } finally {
+      setRemovingImages(prev => ({
+        ...prev,
+        exterior: { ...prev.exterior, [idx]: false }
+      }));
+    }
   };
-  const handleRemoveCoverImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      cimg: "",
-    }));
-    setCimg(null);
+
+  const handleRemoveCoverImage = async () => {
+    setRemovingImages(prev => ({ ...prev, cover: true }));
+
+    try {
+      const imageUrl = formData.cimg;
+      
+      // Delete from ImageKit
+      if (imageUrl) {
+        await deleteFromImageKit(imageUrl);
+      }
+      
+      // Remove from local state
+      setFormData((prev) => ({
+        ...prev,
+        cimg: "",
+      }));
+      setCimg(null);
+    } catch (error) {
+      console.error('Error removing cover image:', error);
+    } finally {
+      setRemovingImages(prev => ({ ...prev, cover: false }));
+    }
+  };
+
+  // Delete project function
+  const handleDeleteProject = async () => {
+    if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Delete all images from ImageKit first
+      const imagesToDelete = [];
+      
+      if (formData.cimg) {
+        imagesToDelete.push(formData.cimg);
+      }
+      
+      if (formData.interiorImages) {
+        imagesToDelete.push(...formData.interiorImages);
+      }
+      
+      if (formData.exteriorImages) {
+        imagesToDelete.push(...formData.exteriorImages);
+      }
+
+      // Delete images from ImageKit
+      await deleteMultipleFromImageKit(imagesToDelete);
+
+      // Delete project from database (you'll need to implement this in your context)
+      await deleteProject(docId);
+
+      setNotification({
+        show: true,
+        message: "Project deleted successfully!",
+        success: true,
+      });
+
+      setTimeout(() => {
+        navigate("/headinfo/list", { state: { toast: "Project deleted successfully!" } });
+      }, 1200);
+
+    } catch (error) {
+      setNotification({
+        show: true,
+        message: "Error deleting project",
+        success: false,
+      });
+      setIsSubmitting(false);
+    }
   };
 
   if (!formData) return <div>Loading...</div>;
@@ -269,9 +414,12 @@ const EditProject = () => {
                     <button
                       type="button"
                       onClick={handleRemoveCoverImage}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      disabled={removingImages.cover}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs disabled:opacity-50"
                       title="Remove Cover Image"
-                    >×</button>
+                    >
+                      {removingImages.cover ? '...' : '×'}
+                    </button>
                   )}
                 </div>
               )}
@@ -325,9 +473,12 @@ const EditProject = () => {
                         <button
                           type="button"
                           onClick={() => handleRemoveInteriorImage(idx)}
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          disabled={removingImages.interior[idx]}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                           title="Remove"
-                        >×</button>
+                        >
+                          {removingImages.interior[idx] ? '...' : '×'}
+                        </button>
                       </div>
                     ))}
               </div>
@@ -381,9 +532,12 @@ const EditProject = () => {
                         <button
                           type="button"
                           onClick={() => handleRemoveExteriorImage(idx)}
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          disabled={removingImages.exterior[idx]}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                           title="Remove"
-                        >×</button>
+                        >
+                          {removingImages.exterior[idx] ? '...' : '×'}
+                        </button>
                       </div>
                     ))}
               </div>
@@ -411,6 +565,15 @@ const EditProject = () => {
             className="w-auto !p-2 !mt-6 bg-black text-white cursor-pointer !py-2 rounded-lg hover:bg-gray-800 text-lg font-semibold"
           >
             {isSubmitting ? "Updating..." : "Save Changes"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDeleteProject}
+            disabled={isSubmitting}
+            className="w-auto !p-2 !mt-4 bg-red-600 text-white cursor-pointer !py-2 rounded-lg hover:bg-red-700 text-lg font-semibold ml-4"
+          >
+            {isSubmitting ? "Deleting..." : "Delete Project"}
           </button>
         </form>
       </div>
