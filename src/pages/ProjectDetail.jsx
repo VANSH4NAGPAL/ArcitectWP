@@ -1,14 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { FaBars } from 'react-icons/fa';
 import Navigation from '../components/Navigation';
-import { projects, getExteriorProjects, getInteriorProjects } from '../data/projects';
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { db } from '../firebase';
 import '../App.css';
 
 function ProjectDetail() {
   const { id } = useParams();
-  // Convert id to number once
   const numericId = Number(id);
   const titleRef = useRef(null);
   const lineRef = useRef(null);
@@ -16,11 +16,37 @@ function ProjectDetail() {
   const [modalImages, setModalImages] = useState(null);
   const [modalIndex, setModalIndex] = useState(0);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [showSections, setShowSections] = useState(true); // Always show sections, no animation
+  const [showSections, setShowSections] = useState(true);
 
-  const currentProject = projects.find(p => p.id === numericId);
-  const exteriorProjects = currentProject ? getExteriorProjects(numericId) : [];
-  const interiorProjects = currentProject ? getInteriorProjects(numericId) : [];
+  // Fetch all projects from Firestore
+  const [allProjects, setAllProjects] = useState([]);
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "projects"), (snapshot) => {
+      const data = snapshot.docs.map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data(),
+      }));
+      setAllProjects(data);
+    });
+    return () => unsub();
+  }, []);
+
+  // Find current project by id
+  const currentProject = allProjects.find(p => Number(p.id) === numericId);
+
+  // Helper: get exterior/interior images as "projects"
+  const exteriorProjects = currentProject?.exteriorImages?.map((url, idx) => ({
+    id: `exterior-${idx}`,
+    mainImage: url,
+    hoverImage: url,
+    title: currentProject.title,
+  })) || [];
+  const interiorProjects = currentProject?.interiorImages?.map((url, idx) => ({
+    id: `interior-${idx}`,
+    mainImage: url,
+    hoverImage: url,
+    title: currentProject.title,
+  })) || [];
 
   // --- Modal for Images ---
   const ImageModal = ({ images, onClose }) => {
@@ -113,52 +139,42 @@ function ProjectDetail() {
       }}
     >
       <div
-        className="relative overflow-hidden bg-gray-100 !mb-4"
+        className="relative overflow-hidden bg-gray-100 !mb-4  shadow"
         style={{
-          width: '100%',
-          maxWidth: '320px',
-          height: 'min(128vw, 377px)',
-          maxHeight: '482px'
+          width: '360px',
+          height: '543px',
+          maxWidth: '90vw',
+          maxHeight: '90vw',
+          aspectRatio: '1/1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
         <img
           src={project.mainImage}
           alt={project.title}
-          className="w-full h-full object-cover absolute inset-0"
+          className="w-full h-full object-cover transition-all duration-300"
           style={{
             opacity: hoveredProject === project.id ? 0 : 1,
-            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
-            transition: 'none'
+            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)'
           }}
         />
         <img
           src={project.hoverImage}
           alt={project.title}
-          className="w-full h-full object-cover absolute inset-0"
+          className="w-full h-full object-cover absolute inset-0 transition-all duration-300"
           style={{
             opacity: hoveredProject === project.id ? 1 : 0,
-            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)',
-            transition: 'none'
+            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)'
           }}
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10"
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none"
           style={{
-            opacity: hoveredProject === project.id ? 1 : 0,
-            transition: 'none'
+            opacity: hoveredProject === project.id ? 1 : 0
           }}
         />
-      </div>
-      <div
-        className="text-left !pt-4 sm:!pt-5 lg:!pt-7"
-        style={{
-          transform: hoveredProject === project.id ? 'translateY(-3px)' : 'translateY(0)',
-          transition: 'none'
-        }}
-      >
-        <h3 className="text-lg sm:text-[20px] font-400 text-gray-900 transition-colors duration-300 group-hover:text-gray-700">
-          {project.title}
-        </h3>
       </div>
     </div>
   );

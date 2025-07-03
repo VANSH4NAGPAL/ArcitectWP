@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import Navigation from '../components/Navigation';
-import { allProjects } from '../data/projects';
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { db } from '../firebase';
 import '../App.css';
 
 const PROJECTS_PER_LOAD = 11;
@@ -18,6 +19,7 @@ function Projects() {
   const [loadingSkeletons, setLoadingSkeletons] = useState([]);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [activeTypes, setActiveTypes] = useState([]); // Change activeType to an array for multi-select
+  const [allProjects, setAllProjects] = useState([]);
 
   const navigate = useNavigate();
   const titleRef = useRef(null);
@@ -26,6 +28,18 @@ function Projects() {
   const projectsGridRef = useRef(null);
   const containerRef = useRef(null);
 
+  // Fetch projects from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "projects"), (snapshot) => {
+      const data = snapshot.docs.map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data(),
+      }));
+      setAllProjects(data);
+    });
+    return () => unsub();
+  }, []);
+
   // Get all unique types from projects (only those that actually exist)
   const allTypes = useMemo(() => {
     const types = new Set();
@@ -33,7 +47,7 @@ function Projects() {
       if (p.type) types.add(p.type);
     });
     return ["All", ...Array.from(types)];
-  }, []);
+  }, [allProjects]);
 
   // Filtered projects based on activeTypes (filter by type only)
   const filteredProjects = useMemo(() => {
@@ -46,7 +60,7 @@ function Projects() {
     return allProjects.filter(
       p => p.type && activeTypes.includes(p.type)
     );
-  }, [activeTypes]);
+  }, [activeTypes, allProjects]);
 
   // Initial load (no animation)
   useEffect(() => {
@@ -358,8 +372,8 @@ function Projects() {
                           }}
                         >
                           <img
-                            className="absolute inset-0 w-full h-full object-contain object-center transition-all duration-500 opacity-0 image-fade-in"
-                            src={item.mainImage || item.image}
+                            className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 opacity-0 image-fade-in"
+                            src={item.cimg}
                             alt={item.title}
                             loading="lazy"
                             onLoad={(e) => {
@@ -367,8 +381,8 @@ function Projects() {
                             }}
                           />
                           <img
-                            className="absolute inset-0 w-full h-full object-contain object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                            src={item.hoverImage || item.mainImage || item.image}
+                            className="absolute inset-0 w-full h-full object-cover object-center opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            src={item.cimg}
                             alt={item.title}
                             loading="lazy"
                           />
