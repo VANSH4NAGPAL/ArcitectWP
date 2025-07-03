@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const IMAGEKIT_URL = "https://upload.imagekit.io/api/v1/files/upload";
-const IMAGEKIT_PUBLIC_KEY = import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY;
-const IMAGEKIT_PRIVATE_KEY = import.meta.env.VITE_IMAGEKIT_PRIVATE_API;
+const IMAGEKIT_PUBLIC_KEY = import.meta.env.IMAGEKIT_PUBLIC_KEY;
+const IMAGEKIT_PRIVATE_KEY = import.meta.env.IMAGEKIT_PRIVATE_API;
 const IMAGEKIT_FOLDER = "/projects"; // optional folder name in your ImageKit dashboard
 
 /**
