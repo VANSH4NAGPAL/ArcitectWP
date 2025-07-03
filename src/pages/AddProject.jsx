@@ -48,7 +48,7 @@ const AddProject = () => {
 
   // Accepts a progress callback for real upload progress
   const uploadToImageKit = async (file, onProgress) => {
-    const auth = await axios.get("http://localhost:5000/auth"); // Replace with your backend URL
+    const auth = await axios.get("/api/auth"); // Replace with your backend URL
     const form = new FormData();
     form.append("file", file);
     form.append("fileName", file.name);

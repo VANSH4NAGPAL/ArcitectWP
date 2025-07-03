@@ -32,7 +32,7 @@ const EditProject = () => {
 
   // Helper: upload to ImageKit (same as AddProject)
   const uploadToImageKit = async (file, onProgress) => {
-    const auth = await axios.get("http://localhost:5000/auth");
+    const auth = await axios.get("/api/auth");
     const form = new FormData();
     form.append("file", file);
     form.append("fileName", file.name);
