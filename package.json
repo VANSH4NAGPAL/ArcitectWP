@@ -16,6 +16,7 @@
     "firebase": "^11.10.0",
     "framer-motion": "^12.18.1",
     "gsap": "^3.13.0",
+    "imagekit": "^6.0.0",
     "lucide-react": "^0.522.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
