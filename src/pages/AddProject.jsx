@@ -48,11 +48,11 @@ const AddProject = () => {
 
   // Accepts a progress callback for real upload progress
   const uploadToImageKit = async (file, onProgress) => {
-    const auth = await axios.get("/api/auth"); // Replace with your backend URL
+    const auth = await axios.get("/api/auth");
     const form = new FormData();
     form.append("file", file);
     form.append("fileName", file.name);
-    form.append("publicKey", import.meta.env.IMAGEKIT_PUBLIC_KEY);
+    form.append("publicKey", import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY); // Updated
     form.append("signature", auth.data.signature);
     form.append("expire", auth.data.expire);
     form.append("token", auth.data.token);
