@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // import Carousel from '../components/Carousel'; // Removed Carousel import
 import Navigation from '../components/Navigation';
 import { projects } from '../data/projects';
+import { usePageLoader } from '../hooks/usePageLoader';
 import '../App.css';
 
 function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const radius = 15; // Even smaller radius to ensure it fits and is visible
-  const circumference = 2 * Math.PI * radius;
+  const [showVideoLoader, setShowVideoLoader] = useState(false);
+  const [minLoadingTime, setMinLoadingTime] = useState(false);
+  const { isLoading: pageLoading } = usePageLoader();
 
-  const handleSlideChange = (slideIndex) => {
-    setCurrentSlide(slideIndex);
+  // Show video loader only after page loader is complete
+  useEffect(() => {
+    if (!pageLoading && !videoLoaded) {
+      setShowVideoLoader(true);
+      // Ensure minimum loading time of 2 seconds for animation visibility
+      const timer = setTimeout(() => {
+        setMinLoadingTime(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowVideoLoader(false);
+    }
+  }, [pageLoading, videoLoaded]);
+
+  // Handle video loaded - only hide loader if both video is loaded AND minimum time has passed
+  const handleVideoLoaded = () => {
+    setVideoLoaded(true);
+    if (minLoadingTime) {
+      setShowVideoLoader(false);
+    }
   };
+
+  // Hide loader when both conditions are met
+  useEffect(() => {
+    if (videoLoaded && minLoadingTime) {
+      setShowVideoLoader(false);
+    }
+  }, [videoLoaded, minLoadingTime]);
 
   const toggleOverlay = () => {
     setIsOverlayOpen(!isOverlayOpen);
@@ -53,11 +79,100 @@ function Home() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white">
-      {/* Loading Screen */}
-      {!videoLoaded && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
-          <span className="text-xl font-semibold text-slate-700">Loading...</span>
-        </div>
+      {/* Stylish Loading Screen - Shows after page loader */}
+      {showVideoLoader && (
+        <motion.div 
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          {/* Company Name */}
+          <motion.h1
+            className="text-slate-800 text-3xl md:text-4xl lg:text-5xl font-light tracking-[0.2em] mb-12"
+            style={{ fontFamily: '"Coolvetica Extra Light", sans-serif' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            StudioDesignPalette
+          </motion.h1>
+
+          {/* Loading Animation Container */}
+          <div className="relative flex items-center justify-center">
+            {/* Outer Circle */}
+            <motion.div
+              className="w-20 h-20 md:w-24 md:h-24 border-2 border-slate-200 rounded-full"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            />
+            
+            {/* Animated Inner Circle */}
+            <motion.div
+              className="absolute w-20 h-20 md:w-24 md:h-24 border-2 border-transparent border-t-slate-600 border-r-slate-400 rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+            />
+
+            {/* Center Dot */}
+            <motion.div
+              className="absolute w-2 h-2 bg-slate-600 rounded-full"
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1, 0] }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            />
+          </div>
+
+          {/* Loading Text */}
+          <motion.div
+            className="mt-8 flex items-center gap-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <span className="text-slate-600 text-sm font-light tracking-wider">Loading</span>
+            <motion.span
+              className="text-slate-600 text-sm font-light"
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            >
+              ...
+            </motion.span>
+          </motion.div>
+
+          {/* Progress Bar */}
+          <motion.div
+            className="mt-6 w-48 md:w-64 h-0.5 bg-slate-200 rounded-full overflow-hidden"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1 }}
+          >
+            <motion.div
+              className="h-full bg-gradient-to-r from-slate-400 to-slate-600 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ 
+                duration: 2, 
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            />
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Fullscreen Responsive Video */}
@@ -69,46 +184,52 @@ function Home() {
           loop
           muted
           playsInline
-          onCanPlayThrough={() => setVideoLoaded(true)}
+          onCanPlayThrough={handleVideoLoaded}
+          onLoadedData={handleVideoLoaded}
         />
       </div>
 
       {/* Main Content */}
-      {videoLoaded && (
+      {videoLoaded && !showVideoLoader && (
         <>
-          {/* Logo - Centered at Top */}
+          {/* Navigation - Positioned at Top */}
           <motion.div
-            className="fixed flex w-full top-4 md:top-8 left-4 md:left-3 z-50 items-center justify-center md:justify-start"
+            className="fixed top-4 md:top-8 left-4 md:left-8 z-50"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <motion.h1
-              className="flex items-center gap-3 "
-              style={{ fontFamily: '"Nunito Sans", sans-serif' }}
-              whileHover={{ scale: 1.01 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            >
-              <img
-                src="/logofullw.png"
-                alt="StudioDesignPalette Logo"
-                className="object-contain drop-shadow-2xl"
-                style={{
-                  width: 'clamp(120px, 25vw, 230px)', // Responsive width: min 120px, max 230px, scales with viewport
-                  height: 'auto',
-                }}
-              />
-            </motion.h1>
+            <Navigation />
           </motion.div>
 
-          {/* Navigation - Positioned Below Logo */}
+          {/* Company Name - Centered */}
           <motion.div
-            className="fixed top-37 md:top-40 lg:top-44 left-4 md:left-8 z-50"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <Navigation />
+            <motion.h1
+              className="text-white text-4xl md:text-5xl lg:text-6xl font-light tracking-widest drop-shadow-2xl text-center"
+              style={{ fontFamily: '"Coolvetica Extra Light", sans-serif' }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            >
+              {"StudioDesignPalette".split("").map((letter, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.6 + index * 0.05,
+                    ease: "easeOut"
+                  }}
+                >
+                  {letter}
+                </motion.span>
+              ))}
+            </motion.h1>
           </motion.div>
 
           {/* Toggle Circle Button - Top Right */}
@@ -317,7 +438,7 @@ function Home() {
                         {/* Project Title - Centered */}
                         <motion.h3
                           className="text-slate-800 text-lg md:text-xl font-light tracking-wide mb-2 group-hover:text-slate-600 transition-colors duration-300 text-center"
-                          style={{ fontFamily: '"Nunito Sans", sans-serif' }}
+                          style={{ fontFamily: '"Coolvetica Extra Light", sans-serif' }}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ 

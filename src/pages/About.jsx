@@ -10,7 +10,7 @@ const About = () => {
     <div className="min-h-screen bg-[#faf9f7] flex flex-col !px-0 md:!px-0">
       {/* MOBILE NAV BUTTON */}
       <motion.button
-        className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+        className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12  bg-white shadow-lg flex items-center justify-center"
         onClick={() => setShowMobileNav(true)}
         aria-label="Open navigation"
         whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
@@ -39,7 +39,7 @@ const About = () => {
             transition={{ duration: 0.35, ease: "easeInOut" }}
           >
             <motion.button
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+              className="absolute top-4 right-4 w-10 h-10  bg-gray-200 flex items-center justify-center"
               onClick={() => setShowMobileNav(false)}
               aria-label="Close navigation"
               whileHover={{ scale: 1.15, rotate: 90 }}
@@ -74,7 +74,7 @@ const About = () => {
         >
           {/* HERO SECTION */}
           <motion.section
-            className="flex flex-col md:flex-row w-full bg-[#faf9f7] border-b border-gray-200 rounded-xl md:rounded-2xl !p-4 md:!p-8"
+            className="flex flex-col md:flex-row w-full bg-[#faf9f7] border-b border-gray-200   !p-4 md:!p-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -109,30 +109,14 @@ const About = () => {
               </motion.p>
             </div>
             
-            {/* Right: Two images side by side */}
-            <div className="flex-1 min-h-[340px] relative flex !gap-4 items-center justify-center !px-0 md:!px-2">
+            {/* Right: Person image */}
+            <div className="flex-1 min-h-[340px] relative flex items-center justify-center !px-0 md:!px-2">
               {/* Person photo - full height */}
-              <div className="flex-1">
+              <div className="w-full max-w-md">
                 <motion.img
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                   alt="Full body portrait of team member"
-                  className="w-full h-[340px] md:h-[420px] object-cover object-center rounded-lg shadow"
-                  style={{ maxHeight: 420 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-              </div>
-              
-              {/* Architecture/office photo */}
-              <div className="flex-1">
-                <motion.img
-                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                  alt="Modern office space"
-                  className="w-full h-[340px] md:h-[420px] object-cover object-center rounded-lg shadow"
+                  className="w-full h-[340px] md:h-[420px] object-cover object-center  shadow"
                   style={{ maxHeight: 420 }}
                   whileHover={{ 
                     scale: 1.05, 
@@ -147,70 +131,97 @@ const About = () => {
 
           {/* ABOUT SECTION */}
           <motion.section
-            className="w-full bg-[#faf9f7] border-b border-gray-200 rounded-xl md:rounded-2xl !p-4 md:!p-8"
+            className="w-full bg-[#faf9f7] border-b border-gray-200  !p-4 md:!p-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             whileHover={{ scale: 1.01, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-12 !gap-8 items-center">
-              {/* Left: Two stacked images */}
-              <div className="md:col-span-3 flex flex-col !gap-4">
-                <motion.img
-                  src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
-                  alt="Team collaboration"
-                  className="w-full h-40 md:h-48 object-cover rounded-lg shadow"
-                  whileHover={{ 
-                    scale: 1.08, 
-                    rotate: 1,
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1) saturate(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-                <motion.img
-                  src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
-                  alt="Design process"
-                  className="w-full h-32 md:h-40 object-cover rounded-lg shadow"
-                  whileHover={{ 
-                    scale: 1.08, 
-                    rotate: -1,
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1) saturate(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-12 !gap-8 items-start">
+              {/* Left: Modern asymmetrical image grid */}
+              <div className="lg:col-span-7">
+                <div className="grid grid-cols-6 grid-rows-4 !gap-3 h-[400px] md:h-[500px]">
+                  {/* Large featured image - spans 4 columns, 3 rows */}
+                  <motion.div
+                    className="col-span-4 row-span-3 relative group overflow-hidden  shadow-lg"
+                    whileHover={{ scale: 1.02, rotate: 0.5 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <motion.img
+                      src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
+                      alt="Team collaboration"
+                      className="w-full h-full object-cover"
+                      whileHover={{ 
+                        scale: 1.1,
+                        filter: "brightness(1.1) saturate(1.2) contrast(1.1)"
+                      }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </motion.div>
+
+                  {/* Small image - top right */}
+                  <motion.div
+                    className="col-span-2 row-span-1 relative group overflow-hidden  shadow-md"
+                    whileHover={{ scale: 1.05, rotate: -1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  >
+                    <motion.img
+                      src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80"
+                      alt="Design process"
+                      className="w-full h-full object-cover"
+                      whileHover={{ 
+                        scale: 1.15,
+                        filter: "brightness(1.2) saturate(1.3)"
+                      }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </motion.div>
+
+                  {/* Medium image - middle right */}
+                  <motion.div
+                    className="col-span-2 row-span-2 relative group overflow-hidden  shadow-md"
+                    whileHover={{ scale: 1.03, rotate: 1 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <motion.img
+                      src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80"
+                      alt="Team meeting"
+                      className="w-full h-full object-cover"
+                      whileHover={{ 
+                        scale: 1.1,
+                        filter: "brightness(1.1) saturate(1.1) contrast(1.05)"
+                      }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-tl from-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </motion.div>
+
+                  {/* Wide image - bottom */}
+                  <motion.div
+                    className="col-span-6 row-span-1 relative group overflow-hidden  shadow-md"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  >
+                    <motion.img
+                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                      alt="Architecture design"
+                      className="w-full h-full object-cover"
+                      whileHover={{ 
+                        scale: 1.05,
+                        filter: "brightness(1.05) saturate(1.1)"
+                      }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-transparent to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </motion.div>
+                </div>
               </div>
-              {/* Center: Two stacked images */}
-              <div className="md:col-span-3 flex flex-col !gap-4">
-                <motion.img
-                  src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80"
-                  alt="Team meeting"
-                  className="w-full h-40 md:h-48 object-cover rounded-lg shadow"
-                  whileHover={{ 
-                    scale: 1.08, 
-                    rotate: 1,
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1) saturate(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-                <motion.img
-                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Architecture design"
-                  className="w-full h-32 md:h-40 object-cover rounded-lg shadow"
-                  whileHover={{ 
-                    scale: 1.08, 
-                    rotate: -1,
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1) saturate(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-              </div>
+
               {/* Right: About text */}
               <motion.div 
-                className="md:col-span-6 flex flex-col justify-center !pl-0 md:!pl-8"
+                className="lg:col-span-5 flex flex-col justify-center !pl-0 lg:!pl-8 !pt-8 lg:!pt-0"
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >

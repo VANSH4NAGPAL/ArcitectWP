@@ -17,14 +17,6 @@ const WHITEBOARD_WIDTH = 3000;
 const WHITEBOARD_HEIGHT = 3000;
 const BOUNDARY_PADDING = 200;
 
-// Predefined colors array
-const COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-  '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-  '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D2B4DE',
-  '#A9DFBF', '#F9E79F', '#D7BDE2', '#A3E4D7', '#FCF3CF'
-];
-
 function Projects() {
   const [displayedProjects, setDisplayedProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +25,7 @@ function Projects() {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [activeCategories, setActiveCategories] = useState([]);
   const [allProjects, setAllProjects] = useState([]);
-  const [whiteboardBgColor, setWhiteboardBgColor] = useState('#f9fafb');
+  const [whiteboardBgColor] = useState('#ffffff');
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationPhase, setAnimationPhase] = useState('idle');
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -66,16 +58,16 @@ function Projects() {
     return () => unsub();
   }, []);
 
-  // Get all unique categories from projects
+  // Get all unique categories from projects (only available ones)
   const allCategories = useMemo(() => {
     const categories = new Set();
     allProjects.forEach(p => p.category && categories.add(p.category));
-    return ["All", ...Array.from(categories)];
+    return Array.from(categories);
   }, [allProjects]);
 
-  // Filtered projects based on activeCategories
+  // Filtered projects based on activeCategories (show all if none selected)
   const filteredProjects = useMemo(() => {
-    if (activeCategories.length === 0 || activeCategories.includes("All")) {
+    if (activeCategories.length === 0) {
       return allProjects;
     }
     return allProjects.filter(p => p.category && p.category === activeCategories[0]);
@@ -116,18 +108,6 @@ function Projects() {
       setLoadingSkeletons([]);
     }, 800);
   }, [displayedProjects.length, filteredProjects, isLoading, hasMore]);
-
-  // Function to get consistent color based on project ID
-  const getColorForProject = useCallback((projectId) => {
-    if (!projectId) return null;
-    let hash = 0;
-    for (let i = 0; i < projectId.length; i++) {
-      const char = projectId.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return COLORS[Math.abs(hash) % COLORS.length];
-  }, []);
 
   // Generate grid positions for projects with animation support
   const projectsWithPositions = useMemo(() => {
@@ -183,11 +163,10 @@ function Projects() {
         y: currentY,
         cardWidth,
         cardHeight,
-        hoverColor: item.isSkeleton ? null : getColorForProject(item.docId),
         animationPhase
       };
     });
-  }, [displayedProjects, loadingSkeletons, animationPhase, allProjects, getColorForProject]);
+  }, [displayedProjects, loadingSkeletons, animationPhase, allProjects]);
 
   // Update transform ref whenever transform state changes
   useEffect(() => {
@@ -450,7 +429,9 @@ function Projects() {
 
   // Filter handlers
   const handleCategoryClick = (category) => {
-    const newCategories = category === "All" ? [] : [category];
+    const newCategories = activeCategories.includes(category) 
+      ? activeCategories.filter(cat => cat !== category)
+      : [category];
     
     if (JSON.stringify(newCategories) !== JSON.stringify(activeCategories)) {
       triggerFilterAnimation(newCategories);
@@ -500,14 +481,12 @@ function Projects() {
       >
 
         {/* Header - Fixed position */}
-        <div className="absolute top-8 left-8 z-30 bg-transparent rounded-lg !p-4 w-full">
+        <div className="absolute top-8 left-8 right-8 z-30 bg-transparent rounded-lg !p-4 w-auto">
           <div className="flex flex-col">
             {/* Category Filter Bar */}
-            <div className="flex flex-wrap gap-5">
+            <div className="flex flex-wrap gap-5 justify-center">
               {allCategories.map((category) => {
-                const isActive = activeCategories.length === 0
-                  ? category === "All"
-                  : activeCategories.includes(category);
+                const isActive = activeCategories.includes(category);
                 return (
                   <button
                     key={category}
@@ -579,19 +558,17 @@ function Projects() {
                     transitionDelay: item.animationPhase === 'sliding' ? `${Math.random() * 0.1}s` : '0s',
                     cursor: 'pointer'
                   }}
-                  onClick={() => navigate(`/project/${item.docId}?color=${encodeURIComponent(item.hoverColor)}`)}
+                  onClick={() => navigate(`/project/${item.docId}`)}
                 >
                   <div 
                     className="w-full h-full overflow-hidden relative"
-                    onMouseEnter={() => setWhiteboardBgColor(item.hoverColor)}
-                    onMouseLeave={() => setWhiteboardBgColor('#f9fafb')}
                   >
                     {item.cimg ? (
                       <div className="relative w-full h-full overflow-hidden">
                         <img 
                           src={item.cimg} 
                           alt={item.title || 'Project image'}
-                          className="w-full h-full object-cover transition-opacity duration-300"
+                          className="w-full h-full object-cover transition-opacity duration-300 "
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
@@ -606,7 +583,7 @@ function Projects() {
                   
                   {/* Title that appears beneath card on hover (desktop) or always visible (mobile) */}
                   <div className="absolute top-full left-0 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-                    <h3 className="text-sm font-semibold text-black line-clamp-2 !mt-2 text-center px-2">
+                    <h3 className="text-sm font-semibold text-black line-clamp-2 !mt-2 text-center px-2 tracking-widest">
                       {item.title}
                     </h3>
                   </div>

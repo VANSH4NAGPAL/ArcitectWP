@@ -3,7 +3,6 @@ import Navigation from './Navigation';
 
 const LeftSidebar = forwardRef(function LeftSidebar(props, ref) {
   const {
-    backgroundImage = "/images/pb1.jpg",
     logoSrc = "/logofullw.png",
     logoAlt = "StudioDesignPalette Logo",
     children,
@@ -14,9 +13,8 @@ const LeftSidebar = forwardRef(function LeftSidebar(props, ref) {
   return (
     <div
       ref={ref}
-      className={`hidden lg:flex lg:w-[20%] lg:h-screen flex-col relative bg-cover bg-bottom bg-no-repeat ${className}`}
+      className={`hidden lg:flex lg:w-[20%] lg:h-screen flex-col relative bg-gray-700 ${className}`}
       style={{
-        backgroundImage: `url('${backgroundImage}')`,
         willChange: "transform, opacity"
       }}
       {...rest}

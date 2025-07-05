@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import AdminAuthWrapper from "../components/AdminAuthWrapper";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { db, analytics } from "../firebase";
 import { collection, getDocs, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
+import { logAdminAction, AUDIT_ACTIONS } from "../utils/auditLogger";
 
 const navLinks = [
   { to: "/headinfo", label: "Dashboard", icon: "🏠" },
@@ -13,12 +14,27 @@ const navLinks = [
 
 const AdminLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
-  // Simple logout: remove admin token and redirect (adjust as per your auth logic)
+  // Enhanced logout: remove admin token, clear all admin data, and redirect
   const handleLogout = () => {
-    sessionStorage.removeItem("admin-auth"); // Use sessionStorage
-    navigate("/headinfo", { replace: true }); // Redirect to login page, replace history
+    // Log logout action
+    logAdminAction(AUDIT_ACTIONS.LOGOUT, {
+      timestamp: Date.now(),
+      reason: 'manual_logout'
+    });
+
+    // Clear session storage
+    sessionStorage.removeItem("admin-auth");
+    
+    // Clear any admin-related localStorage
+    localStorage.removeItem("admin-lockout");
+    localStorage.removeItem("add-project-form");
+    
+    // Clear browser history to prevent back button access
+    window.history.replaceState(null, "", "/headinfo");
+    
+    // Force page reload to ensure clean state
+    window.location.href = "/headinfo";
   };
 
   const [projects, setProjects] = useState([]);
