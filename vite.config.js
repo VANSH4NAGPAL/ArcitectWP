@@ -46,12 +46,8 @@ function handleLocalAPI(req, res) {
           // Multi-admin configuration (you can extend this)
           const adminUsers = [
             {
-              username: 'admin',
-              passwordHash: '$2a$12$ygrQG8A6wH9XO.MpR/Vw2uft5Lbj8oeXArCOE7aTUdvdrW0Ta9G1q' // admin123!@#
-            },
-            {
-              username: 'superadmin',
-              passwordHash: '$2a$12$TYrCHOzXN/b2Kxo.0XtTS.TPt.TvknS0moQjx8bC66f1V06NhAHkAm' // super456$%^
+              username: 'sadmin',
+              passwordHash: '$2a$12$8QcSICxxd2zg4vUwKpI8j.vWU2ymQAkfzzzr51Bbfy1TKhx99o3Xq' // @@private!lgn
             }
           ];
           
