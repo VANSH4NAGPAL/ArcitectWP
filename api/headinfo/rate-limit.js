@@ -26,39 +26,41 @@ export default async function handler(req, res) {
         const { action } = req.body;
 
         if (action === 'check') {
-          const key = `rate_limit:${clientIp}`;
-          const attempts = parseInt(await redis.get(key) || '0');
-          const ttl = await redis.ttl(key);
+          // Commented out rate limiting - no lockout for now
+          // const key = `rate_limit:${clientIp}`;
+          // const attempts = parseInt(await redis.get(key) || '0');
+          // const ttl = await redis.ttl(key);
 
-          if (attempts >= 3) {
-            await redis.disconnect();
-            return res.status(429).json({
-              blocked: true,
-              remainingTime: ttl > 0 ? ttl : 0,
-              message: `IP blocked. Try again in ${Math.ceil(ttl/60)} minutes`
-            });
-          }
+          // if (attempts >= 3) {
+          //   await redis.disconnect();
+          //   return res.status(429).json({
+          //     blocked: true,
+          //     remainingTime: ttl > 0 ? ttl : 0,
+          //     message: `IP blocked. Try again in ${Math.ceil(ttl/60)} minutes`
+          //   });
+          // }
 
           await redis.disconnect();
           return res.status(200).json({
-            blocked: false,
-            attempts,
-            remainingAttempts: 3 - attempts
+            blocked: false, // Always allow - no lockout
+            attempts: 0,
+            remainingAttempts: 3
           });
 
         } else if (action === 'record_failed') {
           const key = `rate_limit:${clientIp}`;
-          const attempts = await redis.incr(key);
-          
-          if (attempts === 1) {
-            await redis.expire(key, 900); // 15 minutes
-          }
+          // Commented out rate limiting - no lockout for now
+          // const attempts = await redis.incr(key);
+          // 
+          // if (attempts === 1) {
+          //   await redis.expire(key, 900); // 15 minutes
+          // }
 
           await redis.disconnect();
           return res.status(200).json({
-            blocked: attempts >= 3,
-            attempts,
-            remainingAttempts: Math.max(0, 3 - attempts)
+            blocked: false, // Always allow - no lockout
+            attempts: 0,
+            remainingAttempts: 3
           });
 
         } else if (action === 'clear') {

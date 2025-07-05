@@ -60,28 +60,33 @@ const AddProject = () => {
 
   // Accepts a progress callback for real upload progress
   const uploadToImageKit = async (file, onProgress) => {
-    const auth = await axios.get("/api/auth");
-    const form = new FormData();
-    form.append("file", file);
-    form.append("fileName", file.name);
-    form.append("publicKey", import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY); // Updated
-    form.append("signature", auth.data.signature);
-    form.append("expire", auth.data.expire);
-    form.append("token", auth.data.token);
+    try {
+      const auth = await axios.get("/api/auth");
+      const form = new FormData();
+      form.append("file", file);
+      form.append("fileName", file.name);
+      form.append("publicKey", import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY); // Updated
+      form.append("signature", auth.data.signature);
+      form.append("expire", auth.data.expire);
+      form.append("token", auth.data.token);
 
-    const res = await axios.post(
-      "https://upload.imagekit.io/api/v1/files/upload",
-      form,
-      {
-        onUploadProgress: (progressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            onProgress(percent);
-          }
-        },
-      }
-    );
-    return res.data.url;
+      const res = await axios.post(
+        "https://upload.imagekit.io/api/v1/files/upload",
+        form,
+        {
+          onUploadProgress: (progressEvent) => {
+            if (onProgress && progressEvent.total) {
+              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onProgress(percent);
+            }
+          },
+        }
+      );
+      return res.data.url;
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw new Error(`Upload failed: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -181,9 +186,22 @@ const AddProject = () => {
       setExteriorFiles([]);
     } catch (err) {
       console.error("Upload failed:", err);
+      let errorMessage = "Error uploading project";
+      
+      if (err.response) {
+        // Server responded with error status
+        errorMessage = `Upload failed: ${err.response.data?.message || err.response.statusText}`;
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = "Upload failed: No response from server";
+      } else {
+        // Something else happened
+        errorMessage = `Upload failed: ${err.message}`;
+      }
+      
       setNotification({
         show: true,
-        message: "Error uploading project",
+        message: errorMessage,
         success: false,
       });
     } finally {

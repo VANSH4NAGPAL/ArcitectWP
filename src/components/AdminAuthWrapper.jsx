@@ -13,7 +13,8 @@ const AdminAuthWrapper = ({ children }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_ATTEMPTS = 3;
-  const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+  // Commented out lockout duration - no lockout for now
+  // const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
   const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours
 
   // Server-side authentication
@@ -150,56 +151,58 @@ const AdminAuthWrapper = ({ children }) => {
 
   // Check lockout status (enhanced with IP checking)
   const checkLockout = useCallback(async () => {
+    // Commented out lockout logic - no lockout for now
     // Check IP-based rate limiting first
-    const ipStatus = await checkIpRateLimit();
-    if (ipStatus.blocked) {
-      setIsLocked(true);
-      setLockoutTime(Date.now() + (ipStatus.remainingTime * 1000));
-      return true;
-    }
+    // const ipStatus = await checkIpRateLimit();
+    // if (ipStatus.blocked) {
+    //   setIsLocked(true);
+    //   setLockoutTime(Date.now() + (ipStatus.remainingTime * 1000));
+    //   return true;
+    // }
 
     // Then check local device lockout
-    const lockoutData = localStorage.getItem("admin-lockout");
-    if (lockoutData) {
-      const { attempts, lockTime } = JSON.parse(lockoutData);
-      
-      if (attempts >= MAX_ATTEMPTS) {
-        const timeRemaining = LOCKOUT_DURATION - (Date.now() - lockTime);
-        if (timeRemaining > 0) {
-          setIsLocked(true);
-          setLockoutTime(lockTime + LOCKOUT_DURATION);
-          return true;
-        } else {
-          // Lockout expired, reset
-          localStorage.removeItem("admin-lockout");
-          setLoginAttempts(0);
-        }
-      }
-    }
-    return false;
-  }, [MAX_ATTEMPTS, LOCKOUT_DURATION, checkIpRateLimit]);
+    // const lockoutData = localStorage.getItem("admin-lockout");
+    // if (lockoutData) {
+    //   const { attempts, lockTime } = JSON.parse(lockoutData);
+    //   
+    //   if (attempts >= MAX_ATTEMPTS) {
+    //     const timeRemaining = LOCKOUT_DURATION - (Date.now() - lockTime);
+    //     if (timeRemaining > 0) {
+    //       setIsLocked(true);
+    //       setLockoutTime(lockTime + LOCKOUT_DURATION);
+    //       return true;
+    //     } else {
+    //       // Lockout expired, reset
+    //       localStorage.removeItem("admin-lockout");
+    //       setLoginAttempts(0);
+    //     }
+    //   }
+    // }
+    return false; // Always allow - no lockout
+  }, [MAX_ATTEMPTS, checkIpRateLimit]);
 
   // Record failed attempt (enhanced with IP tracking)
   const recordFailedAttempt = useCallback(async () => {
+    // Commented out lockout logic - no lockout for now
     // Record IP-based failed attempt
-    const ipResult = await recordIpFailedAttempt();
+    // const ipResult = await recordIpFailedAttempt();
     
     // Also record local device attempt
     const newAttempts = loginAttempts + 1;
     setLoginAttempts(newAttempts);
     
-    const lockoutData = {
-      attempts: newAttempts,
-      lockTime: Date.now()
-    };
+    // const lockoutData = {
+    //   attempts: newAttempts,
+    //   lockTime: Date.now()
+    // };
     
-    localStorage.setItem("admin-lockout", JSON.stringify(lockoutData));
+    // localStorage.setItem("admin-lockout", JSON.stringify(lockoutData));
     
-    if (newAttempts >= MAX_ATTEMPTS || ipResult.blocked) {
-      setIsLocked(true);
-      setLockoutTime(Date.now() + LOCKOUT_DURATION);
-    }
-  }, [loginAttempts, MAX_ATTEMPTS, LOCKOUT_DURATION, recordIpFailedAttempt]);
+    // if (newAttempts >= MAX_ATTEMPTS || ipResult.blocked) {
+    //   setIsLocked(true);
+    //   setLockoutTime(Date.now() + LOCKOUT_DURATION);
+    // }
+  }, [loginAttempts]);
 
   // Clear lockout (enhanced with IP clearing)
   const clearLockout = useCallback(async () => {
@@ -320,7 +323,7 @@ const AdminAuthWrapper = ({ children }) => {
       if (remaining > 0) {
         alert(`Wrong credentials. ${remaining} attempts remaining.`);
       } else {
-        alert('Account locked for 15 minutes due to too many failed attempts.');
+        alert('Too many failed attempts. Please try again.');
       }
     } finally {
       setIsSubmitting(false);

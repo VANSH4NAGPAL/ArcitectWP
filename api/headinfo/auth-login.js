@@ -1,6 +1,9 @@
 // Vercel Serverless Function for Headinfo Authentication
 // This should be deployed as /api/headinfo/auth-login.js
 
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,9 +31,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { compare } = await import('bcryptjs');
-    const jwt = await import('jsonwebtoken');
-
     const { username, password } = req.body;
 
     if (!password) {
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         adminUser = adminUsersList.find(user => user.username === username);
         
         if (adminUser) {
-          isValid = await compare(password, adminUser.passwordHash);
+          isValid = await bcrypt.compare(password, adminUser.passwordHash);
         }
       } catch (parseError) {
         console.error('Error parsing ADMIN_USERS:', parseError);
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     } else {
       // Fallback to single admin mode (backward compatibility)
       // In single admin mode, username is optional
-      isValid = await compare(password, ADMIN_PASSWORD_HASH);
+      isValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
       adminUser = { username: username || 'admin' };
     }
 
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     }
 
     // Generate JWT token
-    const token = jwt.default.sign(
+    const token = jwt.sign(
       { 
         admin: true,
         username: adminUser.username,

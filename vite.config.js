@@ -24,94 +24,140 @@ function handleLocalAPI(req, res) {
       return;
     }
 
+    // Handle ImageKit auth endpoint
+    if (url.includes('/auth') && method === 'GET') {
+      import('crypto').then(crypto => {
+        try {
+          // Mock ImageKit auth for local development
+          const mockPrivateKey = 'private_mock_key_for_local_development_only';
+          
+          // Generate authentication parameters
+          const token = crypto.randomUUID();
+          const expire = Math.floor(Date.now() / 1000) + 2400; // 40 minutes from now
+          
+          // Create signature
+          const signature = crypto
+            .createHmac('sha1', mockPrivateKey)
+            .update(token + expire)
+            .digest('hex');
+
+          console.log('🔐 ImageKit auth generated for local dev');
+          res.statusCode = 200;
+          res.end(JSON.stringify({
+            token,
+            expire,
+            signature
+          }));
+          resolve();
+        } catch (error) {
+          console.error('Error generating ImageKit auth:', error);
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Failed to generate authentication' }));
+          resolve();
+        }
+      }).catch(error => {
+        console.error('Error importing crypto:', error);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: 'Failed to import crypto module' }));
+        resolve();
+      });
+      return;
+    }
+
     // Handle auth-login endpoint
     if (url.includes('/auth-login') && method === 'POST') {
       let body = '';
       req.on('data', chunk => body += chunk.toString());
-      req.on('end', async () => {
-        try {
-          const { username, password } = JSON.parse(body);
-          
-          // Dynamic import for Node.js modules in ESM context
-          const bcrypt = await import('bcryptjs');
-          const jwt = await import('jsonwebtoken');
-          
-          console.log('🔐 Testing credentials...');
-          console.log('Username received:', username || 'none');
-          console.log('Password received:', password ? '***' : 'none');
-          
-          let isValid = false;
-          let adminUser = null;
-          
-          // Multi-admin configuration (you can extend this)
-          const adminUsers = [
-            {
-              username: 'sadmin',
-              passwordHash: '$2a$12$8QcSICxxd2zg4vUwKpI8j.vWU2ymQAkfzzzr51Bbfy1TKhx99o3Xq' // @@private!lgn
-            },
-            {
-     username: 'supersuper',
-     passwordHash: '$2a$12$UsPcMPpivwmgXUyVWQgoPOZbvbKpPJUa6PdAfe9xpsJ.yrjRAOeLW'
-   }
-          ];
-          
-          // Legacy password hash for backward compatibility
-          const legacyHash = '$2a$12$LplY7HMm9vW8ZVD8pl6/IePbasEhRecG91H07gCV6RpJCJKRbw/lG'; // @admin!1234
-          
-          if (username && password) {
-            // Multi-admin mode: check username and password
-            adminUser = adminUsers.find(user => user.username === username);
-            if (adminUser) {
-              isValid = bcrypt.default.compareSync(password, adminUser.passwordHash);
-              console.log(`Found user: ${username}, password valid: ${isValid}`);
+      req.on('end', () => {
+        Promise.all([
+          import('bcryptjs'),
+          import('jsonwebtoken')
+        ]).then(([bcrypt, jwt]) => {
+          try {
+            const { username, password } = JSON.parse(body);
+            
+            console.log('🔐 Testing credentials...');
+            console.log('Username received:', username || 'none');
+            console.log('Password received:', password ? '***' : 'none');
+            
+            let isValid = false;
+            let adminUser = null;
+            
+            // Multi-admin configuration (you can extend this)
+            const adminUsers = [
+              {
+                username: 'only@admin',
+                passwordHash: '$2a$12$wH7QXuDQhaFawB26V35kSeq8rT7h8oCKqdkF7vV4xAD0BWnj/mvNG'
+              }
+            ];
+            
+            // Legacy password hash for backward compatibility
+            const legacyHash = '$2a$12$LplY7HMm9vW8ZVD8pl6/IePbasEhRecG91H07gCV6RpJCJKRbw/lG'; // @admin!1234
+            
+            if (username && password) {
+              // Multi-admin mode: check username and password
+              adminUser = adminUsers.find(user => user.username === username);
+              if (adminUser) {
+                // Handle different bcrypt import structures
+                const compareSync = bcrypt.compareSync || bcrypt.default?.compareSync || bcrypt.default;
+                isValid = compareSync(password, adminUser.passwordHash);
+                console.log(`Found user: ${username}, password valid: ${isValid}`);
+              } else {
+                console.log(`User not found: ${username}`);
+              }
+            } else if (password && !username) {
+              // Backward compatibility: password-only mode
+              adminUser = { username: 'admin' };
+              const compareSync = bcrypt.compareSync || bcrypt.default?.compareSync || bcrypt.default;
+              isValid = compareSync(password, legacyHash);
+              console.log(`Legacy mode, password valid: ${isValid}`);
             } else {
-              console.log(`User not found: ${username}`);
+              console.log('Missing username or password');
             }
-          } else if (password && !username) {
-            // Backward compatibility: password-only mode
-            adminUser = { username: 'admin' };
-            isValid = bcrypt.default.compareSync(password, legacyHash);
-            console.log(`Legacy mode, password valid: ${isValid}`);
-          } else {
-            console.log('Missing username or password');
+            
+            const jwtSecret = '369d93f8bb3c8d5e1165067cfbfe32ec8bbb5642495c28886d084d0609447a3752636ae4c60048cd3ceaf37e5d0f5b8b2ad4d42e38610efeccd94c2f17d76ac2';
+            
+            if (isValid && adminUser) {
+              console.log('✅ Authentication successful');
+              const jwtSign = jwt.sign || jwt.default?.sign || jwt.default;
+              const token = jwtSign(
+                { 
+                  admin: true, 
+                  username: adminUser.username,
+                  timestamp: Date.now() 
+                },
+                jwtSecret,
+                { expiresIn: '2h' }
+              );
+              const response = { 
+                success: true, 
+                token,
+                username: adminUser.username
+              };
+              console.log('📤 Sending auth response:', response);
+              res.statusCode = 200;
+              res.end(JSON.stringify(response));
+            } else {
+              console.log('❌ Authentication failed');
+              const errorResponse = { error: 'Invalid credentials' };
+              console.log('📤 Sending error response:', errorResponse);
+              res.statusCode = 401;
+              res.end(JSON.stringify(errorResponse));
+            }
+          } catch (err) {
+            console.error('Local API Error:', err);
+            const serverErrorResponse = { error: 'Server error' };
+            console.log('📤 Sending server error response:', serverErrorResponse);
+            res.statusCode = 500;
+            res.end(JSON.stringify(serverErrorResponse));
           }
-          
-          const jwtSecret = '369d93f8bb3c8d5e1165067cfbfe32ec8bbb5642495c28886d084d0609447a3752636ae4c60048cd3ceaf37e5d0f5b8b2ad4d42e38610efeccd94c2f17d76ac2';
-          
-          if (isValid && adminUser) {
-            console.log('✅ Authentication successful');
-            const token = jwt.default.sign(
-              { 
-                admin: true, 
-                username: adminUser.username,
-                timestamp: Date.now() 
-              },
-              jwtSecret,
-              { expiresIn: '2h' }
-            );
-            const response = { 
-              success: true, 
-              token,
-              username: adminUser.username
-            };
-            console.log('📤 Sending auth response:', response);
-            res.statusCode = 200;
-            res.end(JSON.stringify(response));
-          } else {
-            console.log('❌ Authentication failed');
-            const errorResponse = { error: 'Invalid credentials' };
-            console.log('📤 Sending error response:', errorResponse);
-            res.statusCode = 401;
-            res.end(JSON.stringify(errorResponse));
-          }
-        } catch (err) {
-          console.error('Local API Error:', err);
-          const serverErrorResponse = { error: 'Server error' };
-          console.log('📤 Sending server error response:', serverErrorResponse);
+          resolve();
+        }).catch(err => {
+          console.error('Error importing modules:', err);
           res.statusCode = 500;
-          res.end(JSON.stringify(serverErrorResponse));
-        }
-        resolve();
+          res.end(JSON.stringify({ error: 'Server error' }));
+          resolve();
+        });
       });
       return;
     }
@@ -120,32 +166,39 @@ function handleLocalAPI(req, res) {
     if (url.includes('/verify-token') && method === 'POST') {
       let body = '';
       req.on('data', chunk => body += chunk.toString());
-      req.on('end', async () => {
-        try {
-          const { token } = JSON.parse(body);
-          console.log('🔍 Verifying token:', token ? 'Token provided' : 'No token');
-          
-          const jwt = await import('jsonwebtoken');
-          const jwtSecret = '369d93f8bb3c8d5e1165067cfbfe32ec8bbb5642495c28886d084d0609447a3752636ae4c60048cd3ceaf37e5d0f5b8b2ad4d42e38610efeccd94c2f17d76ac2';
-          
-          const decoded = jwt.default.verify(token, jwtSecret);
-          console.log('✅ Token verification successful', { 
-            admin: decoded.admin, 
-            username: decoded.username || 'admin',
-            exp: decoded.exp 
-          });
-          res.statusCode = 200;
-          res.end(JSON.stringify({ 
-            valid: true, 
-            admin: decoded.admin,
-            username: decoded.username || 'admin'
-          }));
-        } catch (error) {
-          console.log('❌ Token verification failed:', error.message);
-          res.statusCode = 401;
-          res.end(JSON.stringify({ valid: false, error: 'Invalid token' }));
-        }
-        resolve();
+      req.on('end', () => {
+        import('jsonwebtoken').then(jwt => {
+          try {
+            const { token } = JSON.parse(body);
+            console.log('🔍 Verifying token:', token ? 'Token provided' : 'No token');
+            
+            const jwtSecret = '369d93f8bb3c8d5e1165067cfbfe32ec8bbb5642495c28886d084d0609447a3752636ae4c60048cd3ceaf37e5d0f5b8b2ad4d42e38610efeccd94c2f17d76ac2';
+            
+            const jwtVerify = jwt.verify || jwt.default?.verify || jwt.default;
+            const decoded = jwtVerify(token, jwtSecret);
+            console.log('✅ Token verification successful', { 
+              admin: decoded.admin, 
+              username: decoded.username || 'admin',
+              exp: decoded.exp 
+            });
+            res.statusCode = 200;
+            res.end(JSON.stringify({ 
+              valid: true, 
+              admin: decoded.admin,
+              username: decoded.username || 'admin'
+            }));
+          } catch (error) {
+            console.log('❌ Token verification failed:', error.message);
+            res.statusCode = 401;
+            res.end(JSON.stringify({ valid: false, error: 'Invalid token' }));
+          }
+          resolve();
+        }).catch(error => {
+          console.error('Error importing jwt:', error);
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Server error' }));
+          resolve();
+        });
       });
       return;
     }
@@ -239,6 +292,16 @@ export default defineConfig(() => {
         configureServer(server) {
           server.middlewares.use('/api/headinfo', (req, res) => {
             console.log(`🔄 Intercepting local API call: ${req.method} ${req.url}`);
+            handleLocalAPI(req, res);
+          });
+        }
+      },
+      // Custom plugin to handle auth API locally
+      {
+        name: 'local-auth-api',
+        configureServer(server) {
+          server.middlewares.use('/api/auth', (req, res) => {
+            console.log(`🔄 Intercepting auth API call: ${req.method} ${req.url}`);
             handleLocalAPI(req, res);
           });
         }

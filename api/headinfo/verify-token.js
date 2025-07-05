@@ -1,4 +1,6 @@
 // Vercel Serverless Function for Token Verification
+import jwt from 'jsonwebtoken';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -13,7 +15,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const jwt = await import('jsonwebtoken');
     const JWT_SECRET = process.env.JWT_SECRET;
 
     const { token } = req.body;
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.default.verify(tokenToVerify, JWT_SECRET);
+    const decoded = jwt.verify(tokenToVerify, JWT_SECRET);
     
     // Check if token is expired
     if (decoded.exp < Math.floor(Date.now() / 1000)) {
