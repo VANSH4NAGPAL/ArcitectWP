@@ -3,7 +3,9 @@ import { logAdminAction, AUDIT_ACTIONS } from "../utils/auditLogger";
 
 const AdminAuthWrapper = ({ children }) => {
   const [access, setAccess] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
@@ -15,14 +17,14 @@ const AdminAuthWrapper = ({ children }) => {
   const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours
 
   // Server-side authentication
-  const authenticateWithServer = useCallback(async (password) => {
+  const authenticateWithServer = useCallback(async (username, password) => {
     try {
-      const response = await fetch('/api/admin/auth-login', {
+      const response = await fetch('/api/headinfo/auth-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -40,7 +42,7 @@ const AdminAuthWrapper = ({ children }) => {
   // Verify token with server
   const verifyTokenWithServer = useCallback(async (token) => {
     try {
-      const response = await fetch('/api/admin/verify-token', {
+      const response = await fetch('/api/headinfo/verify-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +99,7 @@ const AdminAuthWrapper = ({ children }) => {
   // Enhanced rate limiting with IP-based blocking
   const checkIpRateLimit = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/rate-limit', {
+      const response = await fetch('/api/headinfo/rate-limit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check' }),
@@ -117,7 +119,7 @@ const AdminAuthWrapper = ({ children }) => {
 
   const recordIpFailedAttempt = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/rate-limit', {
+      const response = await fetch('/api/headinfo/rate-limit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'record_failed' }),
@@ -136,7 +138,7 @@ const AdminAuthWrapper = ({ children }) => {
 
   const clearIpRateLimit = useCallback(async () => {
     try {
-      await fetch('/api/admin/rate-limit', {
+      await fetch('/api/headinfo/rate-limit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'clear' }),
@@ -214,7 +216,8 @@ const AdminAuthWrapper = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       // Check for lockout first
-      if (checkLockout()) {
+      const isLocked = await checkLockout();
+      if (isLocked) {
         setIsLoading(false);
         return;
       }
@@ -275,23 +278,25 @@ const AdminAuthWrapper = ({ children }) => {
   }, [isLocked, lockoutTime, clearLockout]);
 
   const handleLogin = async () => {
-    if (isLocked || !passwordInput.trim()) return;
+    if (isLocked || !usernameInput.trim() || !passwordInput.trim()) return;
 
     setIsSubmitting(true);
 
     try {
       // Authenticate with server
-      const authResult = await authenticateWithServer(passwordInput);
+      const authResult = await authenticateWithServer(usernameInput, passwordInput);
       
       if (authResult.success && authResult.token) {
         setSecureSession(authResult.token);
         setAccess(true);
         clearLockout();
+        setUsernameInput("");
         setPasswordInput("");
         
         // Log successful login
         logAdminAction(AUDIT_ACTIONS.LOGIN, {
           method: 'server_auth',
+          username: usernameInput,
           timestamp: Date.now()
         });
       }
@@ -301,17 +306,19 @@ const AdminAuthWrapper = ({ children }) => {
       // Log failed login attempt
       logAdminAction(AUDIT_ACTIONS.LOGIN_FAILED, {
         error: err.message,
+        username: usernameInput,
         timestamp: Date.now(),
         attemptNumber: loginAttempts + 1
       });
       
       recordFailedAttempt();
       recordIpFailedAttempt();
+      setUsernameInput("");
       setPasswordInput("");
       
       const remaining = MAX_ATTEMPTS - loginAttempts - 1;
       if (remaining > 0) {
-        alert(`Wrong password. ${remaining} attempts remaining.`);
+        alert(`Wrong credentials. ${remaining} attempts remaining.`);
       } else {
         alert('Account locked for 15 minutes due to too many failed attempts.');
       }
@@ -355,15 +362,46 @@ const AdminAuthWrapper = ({ children }) => {
             </div>
           ) : (
             <>
-              <input
-                type="password"
-                placeholder="Enter Admin Password"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="!w-full !px-4 !py-2 !border !border-gray-300 !rounded-lg !mb-4 !text-black"
-                disabled={isLocked}
-              />
+              <div className="!mb-4">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="!w-full !px-4 !py-2 !border !border-gray-300 !rounded-lg !text-black"
+                  disabled={isLocked}
+                />
+              </div>
+              
+              <div className="!relative !mb-4">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="!w-full !px-4 !py-2 !pr-12 !border !border-gray-300 !rounded-lg !text-black"
+                  disabled={isLocked}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="!absolute !right-3 !top-1/2 !transform !-translate-y-1/2 !text-gray-500 hover:!text-gray-700 !focus:outline-none"
+                  disabled={isLocked}
+                >
+                  {showPassword ? (
+                    <svg className="!w-5 !h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="!w-5 !h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               
               {loginAttempts > 0 && (
                 <div className="!text-sm !text-red-600 !mb-2 !text-center">
@@ -374,10 +412,10 @@ const AdminAuthWrapper = ({ children }) => {
               
               <button
                 onClick={handleLogin}
-                disabled={isLocked || !passwordInput.trim() || isSubmitting}
+                disabled={isLocked || !usernameInput.trim() || !passwordInput.trim() || isSubmitting}
                 className="!w-full !bg-black !text-white !py-2 !rounded-lg hover:!bg-gray-800 disabled:!bg-gray-400 disabled:!cursor-not-allowed"
               >
-                {isSubmitting ? 'Authenticating...' : 'Enter'}
+                {isSubmitting ? 'Authenticating...' : 'Login'}
               </button>
             </>
           )}

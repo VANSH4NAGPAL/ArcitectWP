@@ -34,6 +34,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       valid: true, 
       admin: decoded.admin,
+      username: decoded.username || 'admin', // Fallback for backward compatibility
       expiresAt: decoded.exp * 1000 
     });
 

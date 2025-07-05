@@ -31,10 +31,13 @@ npm install -g vercel
 ### Step 2: Generate Secure Credentials
 
 ```bash
-# Option A: Use the automated setup script
+# Option A: Generate multi-admin configuration
+npm run generate-admin-users
+
+# Option B: Use the automated single admin setup script
 npm run setup-security
 
-# Option B: Manual generation
+# Option C: Manual generation for single admin
 # Generate bcrypt hash for your admin password
 node -e "const bcrypt=require('bcryptjs'); console.log(bcrypt.hashSync('YourSecurePassword123!', 12))"
 
@@ -44,10 +47,11 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ### Step 3: Configure Environment Variables
 
+**For Multi-Admin Setup (Recommended):**
 Create `.env.production` file:
 ```bash
-# Required
-ADMIN_PASSWORD_HASH=$2a$12$your-bcrypt-hash-here
+# Multi-admin configuration
+ADMIN_USERS='[{"username": "admin", "passwordHash": "$2a$12$your-hash-1"}, {"username": "superadmin", "passwordHash": "$2a$12$your-hash-2"}]'
 JWT_SECRET=your-secure-64-character-secret-here
 
 # Optional - Redis for distributed rate limiting
@@ -60,6 +64,16 @@ FIREBASE_PROJECT_ID=your-firebase-project-id
 AUDIT_WEBHOOK_URL=https://hooks.slack.com/services/your/webhook/url
 ```
 
+**For Single Admin Setup (Backward Compatibility):**
+Create `.env.production` file:
+```bash
+# Single admin (legacy mode)
+ADMIN_PASSWORD_HASH=$2a$12$your-bcrypt-hash-here
+JWT_SECRET=your-secure-64-character-secret-here
+
+# Optional variables (same as above)
+```
+
 ### Step 4: Deploy to Vercel
 
 ```bash
@@ -67,8 +81,14 @@ AUDIT_WEBHOOK_URL=https://hooks.slack.com/services/your/webhook/url
 vercel login
 
 # Set environment variables in Vercel
+# For multi-admin setup:
+vercel env add ADMIN_USERS
+vercel env add JWT_SECRET
+
+# For single admin setup:
 vercel env add ADMIN_PASSWORD_HASH
 vercel env add JWT_SECRET
+
 # Add other optional variables as needed
 
 # Deploy to production
@@ -159,13 +179,14 @@ npm run test-security -- --url https://your-domain.com --password YourPassword12
 
 ### 1. Server-Side Authentication
 - **Before**: Client-side password check (insecure)
-- **After**: bcrypt + JWT server-side validation
-- **Files**: `api/admin/auth-login.js`, `api/admin/verify-token.js`
+- **After**: bcrypt + JWT server-side validation with multi-admin support
+- **Features**: Username + password authentication, show/hide password toggle
+- **Files**: `api/headinfo/auth-login.js`, `api/headinfo/verify-token.js`
 
 ### 2. Brute Force Protection
 - **Before**: No protection
 - **After**: 3 attempts → 15 min lockout (device + IP)
-- **Files**: `src/components/AdminAuthWrapper.jsx`, `api/admin/rate-limit.js`
+- **Files**: `src/components/AdminAuthWrapper.jsx`, `api/headinfo/rate-limit.js`
 
 ### 3. Session Management
 - **Before**: Simple localStorage
@@ -180,15 +201,18 @@ npm run test-security -- --url https://your-domain.com --password YourPassword12
 ### 5. Audit Logging
 - **Before**: No logging
 - **After**: Local + server persistent logging
-- **Files**: `src/utils/auditLogger.js`, `api/admin/store-audit.js`
+- **Files**: `src/utils/auditLogger.js`, `api/headinfo/store-audit.js`
 
 ---
 
 ## 🧪 TESTING CHECKLIST
 
 ### Pre-Deployment Testing:
-- [ ] Admin login with correct password works
+- [ ] Admin login with correct username/password works
+- [ ] Admin login with wrong username fails
 - [ ] Admin login with wrong password fails
+- [ ] Show/hide password toggle works
+- [ ] Backward compatibility with password-only mode works
 - [ ] Brute force protection activates after 3 attempts
 - [ ] Session expires after 2 hours
 - [ ] Cross-tab logout works correctly

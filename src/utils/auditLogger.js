@@ -67,7 +67,7 @@ class AuditLogger {
   async sendToServer(logEntry) {
     try {
       // Send to new persistent storage endpoint
-      await fetch('/api/admin/store-audit', {
+      await fetch('/api/headinfo/store-audit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ class AuditLogger {
       
       // Fallback to original audit-log endpoint
       try {
-        await fetch('/api/admin/audit-log', {
+        await fetch('/api/headinfo/audit-log', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

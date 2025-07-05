@@ -56,17 +56,21 @@ export default async function handler(req, res) {
 
           await redis.disconnect();
           return res.status(200).json({
-            attempts,
             blocked: attempts >= 3,
-            message: attempts >= 3 ? 'IP blocked for 15 minutes' : `${3 - attempts} attempts remaining`
+            attempts,
+            remainingAttempts: Math.max(0, 3 - attempts)
           });
 
         } else if (action === 'clear') {
-          // Clear rate limit on successful login
           const key = `rate_limit:${clientIp}`;
           await redis.del(key);
           await redis.disconnect();
-          return res.status(200).json({ cleared: true });
+          
+          return res.status(200).json({
+            blocked: false,
+            attempts: 0,
+            message: 'Rate limit cleared'
+          });
         }
       }
 

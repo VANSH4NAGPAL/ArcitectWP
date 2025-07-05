@@ -65,10 +65,10 @@ export default async function handler(req, res) {
     }
 
     // Fallback: Enhanced console logging with structured format
-    console.log('🔒 SECURITY AUDIT LOG:', JSON.stringify({
+    console.log('🔒 HEADINFO AUDIT LOG:', JSON.stringify({
       ...auditEntry,
       level: 'SECURITY',
-      service: 'ArchitectWP-Admin'
+      service: 'ArchitectWP-Headinfo'
     }, null, 2));
 
     // For production monitoring, you could also send to external logging service
@@ -78,10 +78,21 @@ export default async function handler(req, res) {
         await fetch(process.env.AUDIT_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(auditEntry)
+          body: JSON.stringify({
+            text: `🔒 Headinfo Audit: ${action}`,
+            attachments: [{
+              color: action.includes('FAILED') || action.includes('VIOLATION') ? 'danger' : 'good',
+              fields: [
+                { title: 'Action', value: action, short: true },
+                { title: 'IP', value: clientIp, short: true },
+                { title: 'Details', value: JSON.stringify(details), short: false },
+                { title: 'Timestamp', value: auditEntry.timestamp, short: true }
+              ]
+            }]
+          })
         });
       } catch (webhookError) {
-        console.error('Audit webhook failed:', webhookError);
+        console.warn('Audit webhook failed:', webhookError);
       }
     }
 
@@ -93,6 +104,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Audit logging error:', error);
-    return res.status(500).json({ error: 'Failed to store audit log' });
+    return res.status(500).json({ 
+      error: 'Failed to log audit entry',
+      details: error.message 
+    });
   }
 }

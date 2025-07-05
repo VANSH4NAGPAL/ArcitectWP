@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     };
 
     // Log to server console (in production, save to database)
-    console.log('AUDIT LOG:', JSON.stringify(serverLogEntry, null, 2));
+    console.log('HEADINFO AUDIT LOG:', JSON.stringify(serverLogEntry, null, 2));
 
     // In production, you would save to a database:
     // await saveToDatabase(serverLogEntry);
