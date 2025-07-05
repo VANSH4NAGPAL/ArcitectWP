@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import Navigation from '../components/Navigation';
 import '../App.css';
 
 function ProjectDetail() {
@@ -10,6 +13,7 @@ function ProjectDetail() {
   const [allProjects, setAllProjects] = useState([]);
   const [showInfo, setShowInfo] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info' or 'story'
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const scrollRef = useRef(null);
 
   // Static white background
@@ -77,6 +81,9 @@ function ProjectDetail() {
     };
   }, [allImages.length]);
 
+  // Placeholder: Replace with your actual sidebar open state/prop
+  const isSidebarOpen = false; // TODO: Replace with real sidebar state
+
   if (allProjects.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -100,6 +107,61 @@ function ProjectDetail() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor }}>
+      {/* Mobile Navigation Button - Top Left, animated with framer-motion (from Contact.jsx, but left) */}
+      <>
+        <motion.button
+          className="fixed top-4 left-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open navigation"
+          whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+          whileTap={{ scale: 0.95, rotate: -10 }}
+          initial={{ opacity: 0, y: -20, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.span
+            initial={{ rotate: 0 }}
+            animate={{ rotate: mobileNavOpen ? 90 : 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <FaBars className="text-2xl text-black" />
+          </motion.span>
+        </motion.button>
+        <AnimatePresence>
+          {mobileNavOpen && (
+            <motion.div
+              className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+            >
+              <motion.button
+                className="absolute top-4 left-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close navigation"
+                whileHover={{ scale: 1.15, rotate: 90 }}
+                whileTap={{ scale: 0.92, rotate: -90 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <span className="text-2xl text-white">&times;</span>
+              </motion.button>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                <Navigation textColor="black" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+
       {/* Top Right Tab Buttons */}
       <div className="fixed top-6 right-6 z-50">
         <div className="bg-white/20 backdrop-blur-md rounded-2xl shadow-lg flex items-center overflow-hidden border border-white/30">
@@ -145,9 +207,9 @@ function ProjectDetail() {
         </div>
       </div>
 
-      {/* Info Overlay - Slides in from right */}
-      <div className={`fixed top-0 right-0 w-[820px] h-full bg-white/40 backdrop-blur-lg border-l border-white/50 shadow-2xl transition-all duration-300 ease-out z-40 ${
-        showInfo ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+      {/* Info Overlay - Slides in from right or left depending on sidebar */}
+      <div className={`fixed top-0 ${isSidebarOpen ? 'left-0 border-r' : 'right-0 border-l'} w-[100vw] sm:w-[40vw] h-full bg-white/40 backdrop-blur-lg border-white/50 shadow-2xl transition-all duration-300 ease-out z-40 ${
+        showInfo ? 'translate-x-0 opacity-100' : isSidebarOpen ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0'
       }`}>
         <div className="!p-6 h-full overflow-y-auto !mt-16">
           {/* Content based on active tab */}

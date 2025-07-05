@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaExpand } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from '../components/Navigation';
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from '../firebase';
@@ -11,8 +12,8 @@ const CARD_WIDTH = 280;
 const CARD_HEIGHT = 200;
 const CARD_WIDTH_MOBILE = 180;
 const CARD_HEIGHT_MOBILE = 130;
-const GRID_SPACING = 40;
-const GRID_SPACING_MOBILE = 20;
+const GRID_SPACING = 60;
+const GRID_SPACING_MOBILE = 40;
 const WHITEBOARD_WIDTH = 3000;
 const WHITEBOARD_HEIGHT = 3000;
 const BOUNDARY_PADDING = 200;
@@ -363,6 +364,67 @@ function Projects() {
     return () => container.removeEventListener('wheel', handleWheelEvent);
   }, [constrainTransform]);
 
+  // Pinch-to-zoom support for touch devices
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let lastDistance = null;
+    let pinchStartScale = null;
+
+    function getDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function handleTouchStart(e) {
+      if (e.touches.length === 2) {
+        lastDistance = getDistance(e.touches);
+        pinchStartScale = transformRef.current.scale;
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (e.touches.length === 2 && lastDistance && pinchStartScale) {
+        e.preventDefault();
+        const newDistance = getDistance(e.touches);
+        const scaleFactor = newDistance / lastDistance;
+        let newScale = pinchStartScale * scaleFactor;
+        newScale = Math.max(0.3, Math.min(2, newScale));
+        // Center zoom on midpoint between fingers
+        const rect = container.getBoundingClientRect();
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        const currentTransform = transformRef.current;
+        const newTransform = {
+          ...currentTransform,
+          scale: newScale,
+          x: midX - (midX - currentTransform.x) * (newScale / currentTransform.scale),
+          y: midY - (midY - currentTransform.y) * (newScale / currentTransform.scale),
+        };
+        setTransform(constrainTransform(newTransform));
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (e.touches.length < 2) {
+        lastDistance = null;
+        pinchStartScale = null;
+      }
+    }
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [constrainTransform]);
+
   // Zoom controls
   const resetView = useCallback(() => {
     centerView();
@@ -440,31 +502,60 @@ function Projects() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
-      {/* Mobile Navigation Button */}
-      <button
-        ref={mobileNavRef}
-        className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
-        onClick={() => setShowMobileNav(true)}
-        aria-label="Open navigation"
-        style={{ cursor: 'pointer' }}
-      >
-        <FaBars className="text-2xl text-gray-800" />
-      </button>
-
-      {/* Mobile Navigation Overlay */}
-      {showMobileNav && (
-        <div className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center">
-          <button
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-            onClick={() => setShowMobileNav(false)}
-            aria-label="Close navigation"
-            style={{ cursor: 'pointer' }}
+      {/* Mobile Navigation Button - Top Right, animated with framer-motion (from Contact.jsx) */}
+      <>
+        <motion.button
+          className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+          onClick={() => setShowMobileNav(true)}
+          aria-label="Open navigation"
+          whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+          whileTap={{ scale: 0.95, rotate: -10 }}
+          initial={{ opacity: 0, y: -20, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <motion.span
+            initial={{ rotate: 0 }}
+            animate={{ rotate: showMobileNav ? 90 : 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
-            <FaTimes className="text-2xl text-gray-800" />
-          </button>
-          <Navigation textColor="black" />
-        </div>
-      )}
+            <FaBars className="text-2xl text-black" />
+          </motion.span>
+        </motion.button>
+        <AnimatePresence>
+          {showMobileNav && (
+            <motion.div
+              className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+            >
+              <motion.button
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+                onClick={() => setShowMobileNav(false)}
+                aria-label="Close navigation"
+                whileHover={{ scale: 1.15, rotate: 90 }}
+                whileTap={{ scale: 0.92, rotate: -90 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <span className="text-2xl text-white">&times;</span>
+              </motion.button>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                <Navigation textColor="black" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
 
       {/* Main Whiteboard Container */}
       <div 
@@ -484,13 +575,13 @@ function Projects() {
         <div className="absolute top-8 left-8 right-8 z-30 bg-transparent rounded-lg !p-4 w-auto">
           <div className="flex flex-col">
             {/* Category Filter Bar */}
-            <div className="flex flex-wrap gap-5 justify-center">
+            <div className="flex flex-wrap gap-2 justify-center">
               {allCategories.map((category) => {
                 const isActive = activeCategories.includes(category);
                 return (
                   <button
                     key={category}
-                    className={`relative flex items-center !px-4 !py-2 cursor-pointer rounded-full tracking-widest text-4xl font-semibold transition-colors font-700 lowercase
+                    className={`relative flex items-center !px-4 !py-2 cursor-pointer rounded-full tracking-widest sm:text-3xl md:text-4xl text-xl  font-semibold transition-colors font-700 lowercase
                       ${isActive
                         ? 'text-black border-black'
                         : 'text-gray-500 border-gray-300 '}
@@ -538,7 +629,6 @@ function Projects() {
               if (item.isSkeleton) {
                 return <LoadingSkeleton key={item.id} x={item.x} y={item.y} cardWidth={item.cardWidth} cardHeight={item.cardHeight} animationPhase={item.animationPhase} />;
               }
-              
               return (
                 <div
                   key={item.docId}
@@ -580,7 +670,6 @@ function Projects() {
                       </div>
                     )}
                   </div>
-                  
                   {/* Title that appears beneath card on hover (desktop) or always visible (mobile) */}
                   <div className="absolute top-full left-0 right-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
                     <h3 className="text-sm font-semibold text-black line-clamp-2 !mt-2 text-center px-2 tracking-widest">
