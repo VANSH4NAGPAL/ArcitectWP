@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Environment files with secrets
+.env.production
+.env.local
+.env
+
+# Security files (delete after use)
+generate-password-hash.js
+simple-hash-generator.js
+password-generator.html
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
