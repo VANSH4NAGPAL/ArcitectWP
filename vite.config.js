@@ -6,14 +6,14 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     rollupOptions: {
-      external: [],
       output: {
-        manualChunks: undefined
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'ui': ['framer-motion'],
+          'firebase': ['firebase/app', 'firebase/firestore']
+        }
       }
     },
-    target: 'es2020'
-  },
-  optimizeDeps: {
-    include: ['bcryptjs', 'jsonwebtoken']
+    chunkSizeWarningLimit: 1000
   }
 })
