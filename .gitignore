@@ -22,6 +22,7 @@ dist-ssr
 PRODUCTION_VARS.md
 *_VARS.md
 .admin-credentials.json
+track-admins.js
 
 # Development and testing files (DO NOT COMMIT)
 generate-*.js
