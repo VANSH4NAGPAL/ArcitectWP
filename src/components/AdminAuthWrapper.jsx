@@ -340,7 +340,7 @@ const AdminAuthWrapper = ({ children }) => {
   if (isLoading) {
     return (
       <div className="!min-h-screen !flex !items-center !justify-center !bg-gray-100">
-        <div className="!text-xl !text-gray-600">Loading...</div>
+        <div className="!text-xl !text-gray-600 !tracking-widest">Loading...</div>
       </div>
     );
   }
@@ -352,54 +352,84 @@ const AdminAuthWrapper = ({ children }) => {
     const seconds = displayTime % 60;
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="w-full max-w-sm p-6 bg-white rounded shadow-md">
-          <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
+      <div className="!min-h-screen !flex !items-center !justify-center !bg-gradient-to-br !from-blue-50 !to-indigo-100">
+        <div className="!w-full !max-w-md !p-8 !bg-white !rounded-2xl !shadow-2xl !border !border-gray-100">
+          <div className="!text-center !mb-8">
+            <h2 className="!text-3xl !font-semibold !text-gray-800 !mb-2 !tracking-widest">Admin Portal</h2>
+            <p className="!text-gray-500 !text-sm !font-semibold !tracking-widest">Please sign in to continue</p>
+          </div>
+          
           {isLocked ? (
-            <div className="mb-4 text-center text-red-600">
-              <div className="font-semibold">Too many failed attempts.</div>
-              <div>
-                Please wait <span className="font-mono">{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}</span> before trying again.
+            <div className="!mb-6 !p-4 !bg-red-50 !border !border-red-200 !rounded-lg">
+              <div className="!font-semibold !text-red-700 !mb-2 !text-center !tracking-widest">🔒 Account Locked</div>
+              <div className="!text-red-600 !text-center !text-sm !font-semibold !tracking-widest">
+                Too many failed attempts. Please wait{' '}
+                <span className="!font-mono !text-red-700 !font-semibold !text-lg !tracking-widest">
+                  {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+                </span>{' '}
+                before trying again.
               </div>
             </div>
           ) : null}
-          <input
-            type="text"
-            className="w-full mb-2 p-2 border rounded"
-            placeholder="Username"
-            value={usernameInput}
-            onChange={e => setUsernameInput(e.target.value)}
-            disabled={isLocked || isSubmitting}
-          />
-          <div className="relative mb-2">
-            <input
-              type={showPassword ? "text" : "password"}
-              className="w-full p-2 border rounded pr-10"
-              placeholder="Password"
-              value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              disabled={isLocked || isSubmitting}
-            />
+          
+          <form className="!space-y-5" onSubmit={(e) => e.preventDefault()}>
+            <div>
+              <label className="!block !text-sm !font-semibold !text-gray-700 !mb-2 !tracking-widest">Username</label>
+              <input
+                type="text"
+                className="!w-full !px-4 !py-3 !border !border-gray-300 !rounded-lg !focus:outline-none !focus:ring-3 !focus:ring-blue-500/20 !focus:border-blue-500 !text-gray-800 !placeholder-gray-400 !transition-all !duration-200 !tracking-widest !font-semibold"
+                placeholder="Enter your username"
+                value={usernameInput}
+                onChange={e => setUsernameInput(e.target.value)}
+                disabled={isLocked || isSubmitting}
+              />
+            </div>
+            
+            <div>
+              <label className="!block !text-sm !font-semibold !text-gray-700 !mb-2 !tracking-widest">Password</label>
+              <div className="!relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="!w-full !px-4 !py-3 !pr-12 !border !border-gray-300 !rounded-lg !focus:outline-none !focus:ring-3 !focus:ring-blue-500/20 !focus:border-blue-500 !text-gray-800 !placeholder-gray-400 !transition-all !duration-200 !tracking-widest !font-semibold"
+                  placeholder="Enter your password"
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  disabled={isLocked || isSubmitting}
+                />
+                <button
+                  type="button"
+                  className="!absolute !right-3 !top-1/2 !transform !-translate-y-1/2 !text-gray-400 hover:!text-gray-600 !transition-colors !duration-200 !p-1 !text-sm !font-semibold !tracking-widest"
+                  onClick={() => setShowPassword(v => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            
             <button
               type="button"
-              className="absolute right-2 top-2 text-gray-500"
-              onClick={() => setShowPassword(v => !v)}
-              tabIndex={-1}
+              className="!w-full !bg-gradient-to-r !from-blue-600 !to-blue-700 hover:!from-blue-700 hover:!to-blue-800 !text-white !font-semibold !py-3 !px-4 !rounded-lg !transition-all !duration-200 !transform hover:!scale-[1.02] active:!scale-[0.98] disabled:!opacity-50 disabled:!cursor-not-allowed disabled:hover:!scale-100 !shadow-lg !tracking-widest"
+              onClick={handleLogin}
+              disabled={isLocked || isSubmitting || !usernameInput.trim() || !passwordInput.trim()}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {isSubmitting ? (
+                <div className="!flex !items-center !justify-center !space-x-2">
+                  <div className="!w-5 !h-5 !border-2 !border-white/30 !border-t-white !rounded-full !animate-spin"></div>
+                  <span className="!tracking-widest !font-semibold">Signing in...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </button>
-          </div>
-          <button
-            className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
-            onClick={handleLogin}
-            disabled={isLocked || isSubmitting}
-          >
-            {isSubmitting ? "Logging in..." : "Login"}
-          </button>
+          </form>
+          
           {loginAttempts > 0 && !isLocked && (
-            <div className="mt-2 text-center text-sm text-gray-500">
-              Attempts: {loginAttempts} / {MAX_ATTEMPTS}
+            <div className="!mt-6 !p-3 !bg-amber-50 !border !border-amber-200 !rounded-lg">
+              <div className="!text-center !text-sm !text-amber-700 !tracking-widest !font-semibold">
+                ⚠️ Failed attempts: <span className="!font-bold">{loginAttempts}</span> of <span className="!font-bold">{MAX_ATTEMPTS}</span>
+              </div>
             </div>
           )}
         </div>
