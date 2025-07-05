@@ -21,11 +21,20 @@ dist-ssr
 # Production credentials (DO NOT COMMIT)
 PRODUCTION_VARS.md
 *_VARS.md
+.admin-credentials.json
 
-# Security files (delete after use)
-generate-password-hash.js
-simple-hash-generator.js
+# Development and testing files (DO NOT COMMIT)
+generate-*.js
+test-*.js
+manage-admins.js
 password-generator.html
+simple-hash-generator.js
+
+# Temporary documentation files
+README_MULTI_ADMIN.md
+VERCEL_DEPLOYMENT_STEPS.md
+LOCAL_PRODUCTION_SETUP.md
+PRODUCTION_VARS_TEMPLATE.md
 
 # Editor directories and files
 .vscode/*

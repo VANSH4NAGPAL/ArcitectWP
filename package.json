@@ -12,6 +12,8 @@
     "test-security": "node scripts/test-security.js",
     "generate-admin-users": "node generate-admin-users.js",
     "generate-custom-admin": "node generate-custom-admin.js",
+    "track-admins": "node track-admins.js",
+    "manage-admins": "node manage-admins.js",
     "test-multi-admin": "node test-multi-admin.js",
     "test-production": "node test-production.js",
     "deploy-prod": "npm run build && vercel --prod",
