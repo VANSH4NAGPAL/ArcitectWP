@@ -26,41 +26,39 @@ export default async function handler(req, res) {
         const { action } = req.body;
 
         if (action === 'check') {
-          // Commented out rate limiting - no lockout for now
-          // const key = `rate_limit:${clientIp}`;
-          // const attempts = parseInt(await redis.get(key) || '0');
-          // const ttl = await redis.ttl(key);
+          const key = `rate_limit:${clientIp}`;
+          const attempts = parseInt(await redis.get(key) || '0');
+          const ttl = await redis.ttl(key);
 
-          // if (attempts >= 3) {
-          //   await redis.disconnect();
-          //   return res.status(429).json({
-          //     blocked: true,
-          //     remainingTime: ttl > 0 ? ttl : 0,
-          //     message: `IP blocked. Try again in ${Math.ceil(ttl/60)} minutes`
-          //   });
-          // }
+          if (attempts >= 3) {
+            await redis.disconnect();
+            return res.status(429).json({
+              blocked: true,
+              remainingTime: ttl > 0 ? ttl : 0,
+              message: `IP blocked. Try again in ${Math.ceil(ttl/60)} minutes`
+            });
+          }
 
           await redis.disconnect();
           return res.status(200).json({
-            blocked: false, // Always allow - no lockout
-            attempts: 0,
-            remainingAttempts: 3
+            blocked: false,
+            attempts: attempts,
+            remainingAttempts: 3 - attempts
           });
 
         } else if (action === 'record_failed') {
           const key = `rate_limit:${clientIp}`;
-          // Commented out rate limiting - no lockout for now
-          // const attempts = await redis.incr(key);
-          // 
-          // if (attempts === 1) {
-          //   await redis.expire(key, 900); // 15 minutes
-          // }
+          const attempts = await redis.incr(key);
+          
+          if (attempts === 1) {
+            await redis.expire(key, 900); // 15 minutes
+          }
 
           await redis.disconnect();
           return res.status(200).json({
-            blocked: false, // Always allow - no lockout
-            attempts: 0,
-            remainingAttempts: 3
+            blocked: attempts >= 3,
+            attempts: attempts,
+            remainingAttempts: Math.max(0, 3 - attempts)
           });
 
         } else if (action === 'clear') {
@@ -78,11 +76,65 @@ export default async function handler(req, res) {
 
       await redis.disconnect();
     } else {
-      // Fallback to basic response when Redis is not available
+      // Fallback to in-memory rate limiting when Redis is not available
+      // Note: This will only work for single instance deployments
+      if (!globalThis.rateLimitStore) {
+        globalThis.rateLimitStore = new Map();
+      }
+
+      if (req.method === 'POST') {
+        const { action } = req.body;
+        const key = `rate_limit:${clientIp}`;
+        const now = Date.now();
+
+        if (action === 'check') {
+          const record = globalThis.rateLimitStore.get(key);
+          if (record && record.attempts >= 3) {
+            const remainingTime = Math.max(0, Math.ceil((record.expiresAt - now) / 1000));
+            if (remainingTime > 0) {
+              return res.status(429).json({
+                blocked: true,
+                remainingTime: remainingTime,
+                message: `IP blocked. Try again in ${Math.ceil(remainingTime/60)} minutes`
+              });
+            } else {
+              // Expired, remove the record
+              globalThis.rateLimitStore.delete(key);
+            }
+          }
+
+          return res.status(200).json({
+            blocked: false,
+            attempts: record ? record.attempts : 0,
+            remainingAttempts: record ? Math.max(0, 3 - record.attempts) : 3
+          });
+
+        } else if (action === 'record_failed') {
+          const record = globalThis.rateLimitStore.get(key) || { attempts: 0, expiresAt: 0 };
+          record.attempts += 1;
+          record.expiresAt = now + (15 * 60 * 1000); // 15 minutes
+          globalThis.rateLimitStore.set(key, record);
+
+          return res.status(200).json({
+            blocked: record.attempts >= 3,
+            attempts: record.attempts,
+            remainingAttempts: Math.max(0, 3 - record.attempts)
+          });
+
+        } else if (action === 'clear') {
+          globalThis.rateLimitStore.delete(key);
+          return res.status(200).json({
+            blocked: false,
+            attempts: 0,
+            message: 'Rate limit cleared'
+          });
+        }
+      }
+
       return res.status(200).json({
         blocked: false,
         attempts: 0,
-        message: 'Redis not configured - using client-side rate limiting'
+        message: 'Redis not configured - using in-memory rate limiting'
       });
     }
 

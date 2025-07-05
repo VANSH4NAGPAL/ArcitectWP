@@ -10,11 +10,11 @@ const AdminAuthWrapper = ({ children }) => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_ATTEMPTS = 3;
-  // Commented out lockout duration - no lockout for now
-  // const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+  const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
   const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours
 
   // Server-side authentication
@@ -151,58 +151,56 @@ const AdminAuthWrapper = ({ children }) => {
 
   // Check lockout status (enhanced with IP checking)
   const checkLockout = useCallback(async () => {
-    // Commented out lockout logic - no lockout for now
     // Check IP-based rate limiting first
-    // const ipStatus = await checkIpRateLimit();
-    // if (ipStatus.blocked) {
-    //   setIsLocked(true);
-    //   setLockoutTime(Date.now() + (ipStatus.remainingTime * 1000));
-    //   return true;
-    // }
+    const ipStatus = await checkIpRateLimit();
+    if (ipStatus.blocked) {
+      setIsLocked(true);
+      setLockoutTime(Date.now() + (ipStatus.remainingTime * 1000));
+      return true;
+    }
 
     // Then check local device lockout
-    // const lockoutData = localStorage.getItem("admin-lockout");
-    // if (lockoutData) {
-    //   const { attempts, lockTime } = JSON.parse(lockoutData);
-    //   
-    //   if (attempts >= MAX_ATTEMPTS) {
-    //     const timeRemaining = LOCKOUT_DURATION - (Date.now() - lockTime);
-    //     if (timeRemaining > 0) {
-    //       setIsLocked(true);
-    //       setLockoutTime(lockTime + LOCKOUT_DURATION);
-    //       return true;
-    //     } else {
-    //       // Lockout expired, reset
-    //       localStorage.removeItem("admin-lockout");
-    //       setLoginAttempts(0);
-    //     }
-    //   }
-    // }
-    return false; // Always allow - no lockout
-  }, [MAX_ATTEMPTS, checkIpRateLimit]);
+    const lockoutData = localStorage.getItem("admin-lockout");
+    if (lockoutData) {
+      const { attempts, lockTime } = JSON.parse(lockoutData);
+      
+      if (attempts >= MAX_ATTEMPTS) {
+        const timeRemaining = LOCKOUT_DURATION - (Date.now() - lockTime);
+        if (timeRemaining > 0) {
+          setIsLocked(true);
+          setLockoutTime(lockTime + LOCKOUT_DURATION);
+          return true;
+        } else {
+          // Lockout expired, reset
+          localStorage.removeItem("admin-lockout");
+          setLoginAttempts(0);
+        }
+      }
+    }
+    return false;
+  }, [MAX_ATTEMPTS, LOCKOUT_DURATION, checkIpRateLimit]);
 
   // Record failed attempt (enhanced with IP tracking)
   const recordFailedAttempt = useCallback(async () => {
-    // Commented out lockout logic - no lockout for now
     // Record IP-based failed attempt
-    // const ipResult = await recordIpFailedAttempt();
+    const ipResult = await recordIpFailedAttempt();
     
     // Also record local device attempt
     const newAttempts = loginAttempts + 1;
     setLoginAttempts(newAttempts);
     
-    // const lockoutData = {
-    //   attempts: newAttempts,
-    //   lockTime: Date.now()
-    // };
+    const lockoutData = {
+      attempts: newAttempts,
+      lockTime: Date.now()
+    };
     
-    // localStorage.setItem("admin-lockout", JSON.stringify(lockoutData));
+    localStorage.setItem("admin-lockout", JSON.stringify(lockoutData));
     
-    // if (newAttempts >= MAX_ATTEMPTS || ipResult.blocked) {
-    //   setIsLocked(true);
-    //   setLockoutTime(Date.now() + LOCKOUT_DURATION);
-    // }
-  }, [loginAttempts]);
+    if (newAttempts >= MAX_ATTEMPTS || ipResult.blocked) {
+      setIsLocked(true);
+      setLockoutTime(Date.now() + LOCKOUT_DURATION);
+    }
+  }, [loginAttempts, MAX_ATTEMPTS, LOCKOUT_DURATION, recordIpFailedAttempt]);
 
   // Clear lockout (enhanced with IP clearing)
   const clearLockout = useCallback(async () => {
@@ -274,6 +272,9 @@ const AdminAuthWrapper = ({ children }) => {
         const timeRemaining = lockoutTime - Date.now();
         if (timeRemaining <= 0) {
           clearLockout();
+          setRemainingTime(0);
+        } else {
+          setRemainingTime(Math.ceil(timeRemaining / 1000));
         }
       }, 1000);
     }
@@ -345,87 +346,62 @@ const AdminAuthWrapper = ({ children }) => {
   }
 
   if (!access) {
-    const remainingTime = isLocked && lockoutTime ? Math.ceil((lockoutTime - Date.now()) / 1000) : 0;
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = remainingTime % 60;
+    // Calculate remaining time for lockout
+    const displayTime = isLocked && lockoutTime ? Math.max(0, Math.ceil((lockoutTime - Date.now()) / 1000)) : 0;
+    const minutes = Math.floor(displayTime / 60);
+    const seconds = displayTime % 60;
 
     return (
-      <div className="!min-h-screen !flex !items-center !justify-center !bg-gray-100 !px-4">
-        <div className="!bg-white !p-8 !rounded-xl !shadow-xl !w-full !max-w-sm">
-          <h2 className="!text-xl !font-semibold !mb-4 !text-center !text-black">
-            Admin Access
-          </h2>
-          
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="w-full max-w-sm p-6 bg-white rounded shadow-md">
+          <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
           {isLocked ? (
-            <div className="!text-center !text-red-600 !mb-4">
-              <div className="!font-semibold !mb-2">Account Locked</div>
-              <div className="!text-sm">
-                Too many failed attempts. Try again in {minutes}:{seconds.toString().padStart(2, '0')}
+            <div className="mb-4 text-center text-red-600">
+              <div className="font-semibold">Too many failed attempts.</div>
+              <div>
+                Please wait <span className="font-mono">{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}</span> before trying again.
               </div>
             </div>
-          ) : (
-            <>
-              <div className="!mb-4">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="!w-full !px-4 !py-2 !border !border-gray-300 !rounded-lg !text-black"
-                  disabled={isLocked}
-                />
-              </div>
-              
-              <div className="!relative !mb-4">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="!w-full !px-4 !py-2 !pr-12 !border !border-gray-300 !rounded-lg !text-black"
-                  disabled={isLocked}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="!absolute !right-3 !top-1/2 !transform !-translate-y-1/2 !text-gray-500 hover:!text-gray-700 !focus:outline-none"
-                  disabled={isLocked}
-                >
-                  {showPassword ? (
-                    <svg className="!w-5 !h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="!w-5 !h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-              
-              {loginAttempts > 0 && (
-                <div className="!text-sm !text-red-600 !mb-2 !text-center">
-                  {loginAttempts} failed attempt{loginAttempts > 1 ? 's' : ''}. 
-                  {MAX_ATTEMPTS - loginAttempts} remaining before lockout.
-                </div>
-              )}
-              
-              <button
-                onClick={handleLogin}
-                disabled={isLocked || !usernameInput.trim() || !passwordInput.trim() || isSubmitting}
-                className="!w-full !bg-black !text-white !py-2 !rounded-lg hover:!bg-gray-800 disabled:!bg-gray-400 disabled:!cursor-not-allowed"
-              >
-                {isSubmitting ? 'Authenticating...' : 'Login'}
-              </button>
-            </>
-          )}
-          
-          <div className="!mt-4 !text-xs !text-gray-500 !text-center">
-            Session expires in 2 hours
+          ) : null}
+          <input
+            type="text"
+            className="w-full mb-2 p-2 border rounded"
+            placeholder="Username"
+            value={usernameInput}
+            onChange={e => setUsernameInput(e.target.value)}
+            disabled={isLocked || isSubmitting}
+          />
+          <div className="relative mb-2">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="w-full p-2 border rounded pr-10"
+              placeholder="Password"
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value)}
+              onKeyDown={handleKeyPress}
+              disabled={isLocked || isSubmitting}
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-2 text-gray-500"
+              onClick={() => setShowPassword(v => !v)}
+              tabIndex={-1}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
           </div>
+          <button
+            className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+            onClick={handleLogin}
+            disabled={isLocked || isSubmitting}
+          >
+            {isSubmitting ? "Logging in..." : "Login"}
+          </button>
+          {loginAttempts > 0 && !isLocked && (
+            <div className="mt-2 text-center text-sm text-gray-500">
+              Attempts: {loginAttempts} / {MAX_ATTEMPTS}
+            </div>
+          )}
         </div>
       </div>
     );

@@ -226,33 +226,89 @@ function handleLocalAPI(req, res) {
       return;
     }
 
-    // Handle rate-limit endpoint (mock - always allow in dev)
+    // Handle rate-limit endpoint with actual rate limiting for testing
     if (url.includes('/rate-limit') && method === 'POST') {
       let body = '';
       req.on('data', chunk => body += chunk.toString());
       req.on('end', () => {
         try {
           const data = JSON.parse(body);
-          console.log('🔄 Rate limit check:', data.action || 'unknown');
+          const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'localhost';
           
-          // Mock response based on action
-          const mockResponse = {
-            blocked: false,
-            attempts: 0,
-            allowed: true,
-            message: `Rate limiting bypassed in development (action: ${data.action || 'check'})`
-          };
+          // Initialize in-memory store for development
+          if (!globalThis.devRateLimitStore) {
+            globalThis.devRateLimitStore = new Map();
+          }
           
-          res.statusCode = 200;
-          res.end(JSON.stringify(mockResponse));
+          const key = `rate_limit:${clientIp}`;
+          const now = Date.now();
+          
+          console.log('🔄 Rate limit check:', data.action || 'unknown', 'for IP:', clientIp);
+          
+          if (data.action === 'check') {
+            const record = globalThis.devRateLimitStore.get(key);
+            if (record && record.attempts >= 3) {
+              const remainingTime = Math.max(0, Math.ceil((record.expiresAt - now) / 1000));
+              if (remainingTime > 0) {
+                res.statusCode = 429;
+                res.end(JSON.stringify({
+                  blocked: true,
+                  remainingTime: remainingTime,
+                  message: `IP blocked in dev. Try again in ${Math.ceil(remainingTime/60)} minutes`
+                }));
+                resolve();
+                return;
+              } else {
+                // Expired, remove the record
+                globalThis.devRateLimitStore.delete(key);
+              }
+            }
+            
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              blocked: false,
+              attempts: record ? record.attempts : 0,
+              remainingAttempts: record ? Math.max(0, 3 - record.attempts) : 3
+            }));
+            
+          } else if (data.action === 'record_failed') {
+            const record = globalThis.devRateLimitStore.get(key) || { attempts: 0, expiresAt: 0 };
+            record.attempts += 1;
+            record.expiresAt = now + (15 * 60 * 1000); // 15 minutes
+            globalThis.devRateLimitStore.set(key, record);
+            
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              blocked: record.attempts >= 3,
+              attempts: record.attempts,
+              remainingAttempts: Math.max(0, 3 - record.attempts)
+            }));
+            
+          } else if (data.action === 'clear') {
+            globalThis.devRateLimitStore.delete(key);
+            res.statusCode = 200;
+            res.end(JSON.stringify({
+              blocked: false,
+              attempts: 0,
+              message: 'Dev rate limit cleared'
+            }));
+            
+          } else {
+            res.statusCode = 200;
+            res.end(JSON.stringify({ 
+              blocked: false, 
+              attempts: 0, 
+              message: 'Unknown action in development' 
+            }));
+          }
+          
         } catch (err) {
           console.error('Rate limit parsing error:', err);
-          res.statusCode = 200; // Still allow in dev even if parsing fails
+          res.statusCode = 200;
           res.end(JSON.stringify({ 
             blocked: false, 
             attempts: 0, 
-            allowed: true, 
-            message: 'Rate limiting bypassed in development (fallback)' 
+            message: 'Rate limiting error in development (fallback)' 
           }));
         }
         resolve();
