@@ -1,32 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Navigation from '../components/Navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBars } from 'react-icons/fa';
-import Carousel from '../components/Carousel';
 
 const About = () => {
-  const headerRef = useRef(null);
   const [showMobileNav, setShowMobileNav] = useState(false);
-
-  const titleRef = useRef(null);
-  const lineRef = useRef(null);
-
-  const [showAbout, setShowAbout] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > window.innerHeight * 0.6) {
-        setShowAbout(true);
-      } else {
-        setShowAbout(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#faf9f7] flex flex-col !px-0 md:!px-0">
@@ -85,80 +63,26 @@ const About = () => {
         )}
       </AnimatePresence>
 
-      {/* CAROUSEL AT THE TOP */}
-      <div className="w-full h-screen relative overflow-hidden p-0 m-0">
-        <Carousel />
-      </div>
-
-      {/* ABOUT SECTION: Always show, not conditionally */}
+      {/* ABOUT SECTION */}
       <div>
-        {/* TOP NAVIGATION BAR */}
-        <div className="flex justify-center lg:justify-start lg:w-[100%] overflow-y-auto ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center">
-          <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]">
-            {/* Heading */}
-            <div
-              className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
-              style={{
-                position: "relative",
-                width: "100%",
-                background: "transparent",
-                zIndex: 10,
-                marginTop: "2.5rem",
-                marginLeft: "0.5rem",
-              }}
-            >
-              <h1
-                ref={titleRef}
-                className="font-light tracking-tight text-gray-900 lowercase  !mt-5"
-                style={{
-                  fontWeight: 700,
-                  fontSize: 'clamp(2.2rem, 6vw, 4rem)',
-                  letterSpacing: '0.1em',
-                  lineHeight: 1.08,
-                  marginBottom: '0.2rem',
-                  background: 'transparent',
-                  width: 'auto',
-                  maxWidth: '90vw',
-                  textAlign: 'left',
-                  zIndex: 70,
-                  color: '#111',
-                  opacity: 1,
-                  transform: 'translateX(0px)',
-                  paddingLeft: 0,
-                }}
-              >
-                About Us
-              </h1>
-              <div
-                ref={lineRef}
-                className="!mt-1"
-                style={{
-                  opacity: 1,
-                  zIndex: 10,
-                  width: '23%',
-                  maxWidth: '100vw',
-                  height: '1px',
-                  background: '#222',
-                  left: 0,
-                  transform: 'scaleX(1)',
-                  transformOrigin: 'left center',
-                  position: 'relative',
-                  marginLeft: 0,
-                  borderRadius: '1px',
-                }}
-              />
-            </div>
-          </div>
-        </div>
         {/* MAIN CONTENT */}
-        <main className="flex-1 flex flex-col !gap-12 !px-4 md:!px-12 !py-8 md:!py-12 !-mt-15 md:!-mt-35">
+        <motion.main 
+          className="flex-1 flex flex-col !gap-12 !px-4 md:!px-12 !py-8 md:!py-12 !mt-8 md:!mt-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           {/* HERO SECTION */}
-          <section
+          <motion.section
             className="flex flex-col md:flex-row w-full bg-[#faf9f7] border-b border-gray-200 rounded-xl md:rounded-2xl !p-4 md:!p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            whileHover={{ scale: 1.01, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
           >
             {/* Left: Heading and subtext */}
             <div className="flex-1 flex flex-col justify-center !pr-0 md:!pr-8 !pb-8 md:!pb-0">
-              <h2
+              <motion.h2
                 className="font-light"
                 style={{
                   fontFamily: 'Coolvetica Extra Light',
@@ -171,53 +95,126 @@ const About = () => {
                   marginBottom: '2.5rem',
                   maxWidth: 500,
                 }}
+                whileHover={{ scale: 1.02, color: '#000' }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 Welcome to our world where inspiration drives design
-              </h2>
-              <p className="text-gray-600 text-base md:text-lg font-light max-w-md leading-relaxed">
+              </motion.h2>
+              <motion.p 
+                className="text-gray-600 text-base md:text-lg font-light max-w-md leading-relaxed"
+                whileHover={{ color: '#374151' }}
+                transition={{ duration: 0.3 }}
+              >
                 We create beautiful spaces that reflect your unique vision and personality. Our team blends creativity with technical expertise to deliver exceptional results for every project.
-              </p>
+              </motion.p>
             </div>
-            {/* Right: Hero image */}
-            <div className="flex-1 min-h-[340px] relative flex items-center justify-center !px-0 md:!px-2">
-              <img
-                src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="Modern office space"
-                className="w-full h-[340px] md:h-[420px] object-cover object-center rounded-lg shadow"
-                style={{ maxHeight: 420 }}
-              />
+            
+            {/* Right: Two images side by side */}
+            <div className="flex-1 min-h-[340px] relative flex !gap-4 items-center justify-center !px-0 md:!px-2">
+              {/* Person photo - full height */}
+              <div className="flex-1">
+                <motion.img
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Full body portrait of team member"
+                  className="w-full h-[340px] md:h-[420px] object-cover object-center rounded-lg shadow"
+                  style={{ maxHeight: 420 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              </div>
+              
+              {/* Architecture/office photo */}
+              <div className="flex-1">
+                <motion.img
+                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                  alt="Modern office space"
+                  className="w-full h-[340px] md:h-[420px] object-cover object-center rounded-lg shadow"
+                  style={{ maxHeight: 420 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* ABOUT SECTION */}
-          <section
+          <motion.section
             className="w-full bg-[#faf9f7] border-b border-gray-200 rounded-xl md:rounded-2xl !p-4 md:!p-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            whileHover={{ scale: 1.01, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
           >
             <div className="grid grid-cols-1 md:grid-cols-12 !gap-8 items-center">
               {/* Left: Two stacked images */}
               <div className="md:col-span-3 flex flex-col !gap-4">
-                <img
+                <motion.img
                   src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
                   alt="Team collaboration"
                   className="w-full h-40 md:h-48 object-cover rounded-lg shadow"
+                  whileHover={{ 
+                    scale: 1.08, 
+                    rotate: 1,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1) saturate(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
-                <img
+                <motion.img
                   src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
                   alt="Design process"
                   className="w-full h-32 md:h-40 object-cover rounded-lg shadow"
+                  whileHover={{ 
+                    scale: 1.08, 
+                    rotate: -1,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1) saturate(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
               </div>
-              {/* Center: Single tall image */}
-              <div className="md:col-span-3 flex items-center">
-                <img
+              {/* Center: Two stacked images */}
+              <div className="md:col-span-3 flex flex-col !gap-4">
+                <motion.img
                   src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80"
                   alt="Team meeting"
-                  className="w-full h-40 md:h-80 object-cover rounded-lg shadow"
+                  className="w-full h-40 md:h-48 object-cover rounded-lg shadow"
+                  whileHover={{ 
+                    scale: 1.08, 
+                    rotate: 1,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1) saturate(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+                <motion.img
+                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Architecture design"
+                  className="w-full h-32 md:h-40 object-cover rounded-lg shadow"
+                  whileHover={{ 
+                    scale: 1.08, 
+                    rotate: -1,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.2)",
+                    filter: "brightness(1.1) saturate(1.1)"
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
               </div>
               {/* Right: About text */}
-              <div className="md:col-span-6 flex flex-col justify-center !pl-0 md:!pl-8">
-                <h2
+              <motion.div 
+                className="md:col-span-6 flex flex-col justify-center !pl-0 md:!pl-8"
+                whileHover={{ x: 5 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <motion.h2
                   className="!mb-6"
                   style={{
                     fontFamily: 'Coolvetica Extra Light',
@@ -227,19 +224,29 @@ const About = () => {
                     letterSpacing: '0.01em',
                     textTransform: 'none',
                   }}
+                  whileHover={{ scale: 1.02, color: '#000' }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
                   About Our Work
-                </h2>
-                <p className="text-gray-700 text-lg font-light !mb-4 leading-relaxed">
+                </motion.h2>
+                <motion.p 
+                  className="text-gray-700 text-lg font-light !mb-4 leading-relaxed"
+                  whileHover={{ color: '#374151' }}
+                  transition={{ duration: 0.3 }}
+                >
                   Our team works at the intersection of design, strategy, and making. We create spaces that inspire, using a collaborative approach to bring your vision to life.
-                </p>
-                <p className="text-gray-600 text-lg font-light leading-relaxed">
+                </motion.p>
+                <motion.p 
+                  className="text-gray-600 text-lg font-light leading-relaxed"
+                  whileHover={{ color: '#374151' }}
+                  transition={{ duration: 0.3 }}
+                >
                   Every project is unique, and we pride ourselves on attention to detail and a passion for excellence. From concept to completion, we ensure a seamless process and outstanding results.
-                </p>
-              </div>
+                </motion.p>
+              </motion.div>
             </div>
-          </section>
-        </main>
+          </motion.section>
+        </motion.main>
         
       </div>
     </div>

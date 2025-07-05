@@ -11,8 +11,6 @@ function Contact() {
   const socialRefs = useRef([])
   const leftRef = useRef(null)
   const rightRef = useRef(null)
-  const titleRef = useRef(null) // <-- ADD THIS LINE
-  const lineRef = useRef(null)  // <-- ADD THIS LINE
   const [errorMsg, setErrorMsg] = useState('')
   const [showMobileNav, setShowMobileNav] = useState(false)
 
@@ -168,67 +166,15 @@ function Contact() {
         </AnimatePresence>
         {/* LOGO & NAVIGATION - Only on large screens */}
         
-      <div className="flex justify-center lg:justify-start lg:w-[100%] overflow-y-auto  ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center">
-        <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]">
-          {/* Heading */}
-          <div
-            className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
-            style={{
-              position: "relative",
-              width: "100%",
-              background: "transparent",
-              zIndex: 10,
-              marginTop: "2.5rem",
-              marginLeft: "0.5rem",
-            }}
-          >
-            <h1
-              ref={titleRef}
-              className="font-light tracking-tight text-gray-900 lowercase  !mt-5"
-              style={{
-                fontWeight: 700,
-                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
-                letterSpacing: '0.1em',
-                lineHeight: 1.08,
-                marginBottom: '0.2rem',
-                background: 'transparent',
-                width: 'auto',
-                maxWidth: '90vw',
-                textAlign: 'left',
-                zIndex: 70,
-                color: '#111',
-                opacity: 1,
-                transform: 'translateX(0px)',
-                paddingLeft: 0,
-              }}
-            >
-              contact us
-            </h1>
-            <div
-              ref={lineRef}
-              className="!mt-1"
-              style={{
-                opacity: 1,
-                zIndex: 10,
-                width: '27%',
-                maxWidth: '100vw',
-                height: '1px',
-                background: '#222',
-                left: 0,
-                transform: 'scaleX(1)',
-                transformOrigin: 'left center',
-                position: 'relative',
-                marginLeft: 0,
-                borderRadius: '1px',
-              }}
-            />
-          </div>
+      <div className="flex flex-col lg:flex-row justify-center lg:justify-start lg:w-[100%] overflow-y-auto ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center lg:items-start">
+        <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%] flex flex-col lg:flex-row">
+          
+          {/* Left Content */}
           <div
             ref={leftRef}
-            className="flex-1 flex flex-col items-center md:items-start !p-15 !-mt-5 text-2xl tracking-widest font-semibold"
+            className="flex-1 flex flex-col items-center md:items-start !p-15 !mt-5 text-2xl tracking-widest font-semibold"
           >
-            
-            <div className="text-black !mb-10  !mt-0">
+            <div className="text-black !mb-10 !mt-0">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam excepturi et tenetur distinctio numquam similique delectus facilis recusandae quod possimus, sunt deleniti, eum consequuntur rerum non magnam, sed quia? Repellat.50
             </div>
             <div className="mb-8 !mt-0">
@@ -257,7 +203,9 @@ function Contact() {
               ))}
             </div>
           </div>
-          <div ref={rightRef} className="flex-1 flex flex-col items-center justify-center !p-12">
+
+          {/* Right Form */}
+          <div ref={rightRef} className="flex-1 flex flex-col items-center justify-center !p-12 !mt-5 lg:!mt-0">
             <form
               ref={formRef}
               className="w-full max-w-3xl bg-white/10 backdrop-blur-[8px] border border-white/20 shadow-2xl !p-14 flex flex-col gap-4"
@@ -276,7 +224,7 @@ function Contact() {
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
                     </svg>
-                    <span className="text-red-300 font-semibold  !p-4 tracking-wider">{errorMsg}</span>
+                    <span className="text-red-300 font-semibold !p-4 tracking-wider">{errorMsg}</span>
                   </div>
                 </div>
               )}

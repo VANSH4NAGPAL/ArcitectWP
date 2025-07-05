@@ -14,8 +14,20 @@ const AddProject = () => {
     year: "",
     location: "",
     category: "",
+    customCategory: "",
     type: "",
     description: "",
+    client: "",
+    size: "",
+    projectDates: {
+      design: "",
+      fabrication: "",
+      opening: ""
+    },
+    servicesProvided: "",
+    designTeam: "",
+    projectType: "",
+    useType: ""
   });
 
   const [cimg, setCimg] = useState(null);
@@ -149,8 +161,20 @@ const AddProject = () => {
         year: "",
         location: "",
         category: "",
+        customCategory: "",
         type: "",
         description: "",
+        client: "",
+        size: "",
+        projectDates: {
+          design: "",
+          fabrication: "",
+          opening: ""
+        },
+        servicesProvided: "",
+        designTeam: "",
+        projectType: "",
+        useType: ""
       });
       setCimg(null);
       setInteriorFiles([]);
@@ -215,10 +239,12 @@ const AddProject = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            {["title", "area", "year", "location", "category", "type"].map((field) => (
+            {["title", "client", "area", "size", "year", "location", "type"].map((field) => (
               <div key={field} className="flex flex-col gap-2">
                 <label className="!mb-1 font-bold text-black text-lg md:text-xl">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
+                  {field === "client" ? "Client" : 
+                   field === "size" ? "Size (m²)" :
+                   field.charAt(0).toUpperCase() + field.slice(1)}
                 </label>
                 <input
                   type={field === "year" ? "number" : "text"}
@@ -226,18 +252,155 @@ const AddProject = () => {
                   value={formData[field]}
                   onChange={handleChange}
                   required
-                  className="!px-4 py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg "
+                  className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
                 />
               </div>
             ))}
+
+            {/* Category */}
+            <div className="flex flex-col gap-2">
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+              >
+                <option value="">Select Category</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Public Institution">Public Institution</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Custom Category Input - Only show if "Other" is selected */}
+            {formData.category === "Other" && (
+              <div className="flex flex-col gap-2">
+                <label className="!mb-1 font-bold text-black text-lg md:text-xl">Custom Category</label>
+                <input
+                  type="text"
+                  name="customCategory"
+                  value={formData.customCategory || ""}
+                  onChange={handleChange}
+                  placeholder="Enter custom category"
+                  required
+                  className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+                />
+              </div>
+            )}
+
+            {/* Project Dates */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="!mb-1 font-bold text-black text-lg md:text-xl">Design Date</label>
+                <input
+                  type="text"
+                  name="designDate"
+                  value={formData.projectDates.design}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, design: e.target.value }
+                  }))}
+                  placeholder="e.g., April 2019 - May 2020"
+                  className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="!mb-1 font-bold text-black text-lg md:text-xl">Fabrication & Installation</label>
+                <input
+                  type="text"
+                  name="fabricationDate"
+                  value={formData.projectDates.fabrication}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, fabrication: e.target.value }
+                  }))}
+                  placeholder="e.g., June 2020 - August 2020"
+                  className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="!mb-1 font-bold text-black text-lg md:text-xl">Opening Date</label>
+                <input
+                  type="text"
+                  name="openingDate"
+                  value={formData.projectDates.opening}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, opening: e.target.value }
+                  }))}
+                  placeholder="e.g., September 2020"
+                  className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+                />
+              </div>
+            </div>
+
+            {/* Services Provided */}
             <div className="md:col-span-2 flex flex-col gap-2">
-              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Description</label>
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Services Provided</label>
+              <textarea
+                name="servicesProvided"
+                value={formData.servicesProvided}
+                onChange={handleChange}
+                placeholder="e.g., Architectural Installation Concept and Developed Design (RIBA St 2-4a)"
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg focus:border-black focus:ring-2 focus:ring-black/10"
+                rows={3}
+              />
+            </div>
+
+            {/* Design Team */}
+            <div className="md:col-span-2 flex flex-col gap-2">
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Design Team</label>
+              <textarea
+                name="designTeam"
+                value={formData.designTeam}
+                onChange={handleChange}
+                placeholder="e.g., Tom Massey (Horticulture), Cake Industries (Fabrication)"
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg focus:border-black focus:ring-2 focus:ring-black/10"
+                rows={3}
+              />
+            </div>
+
+            {/* Project Type and Use Type */}
+            <div className="flex flex-col gap-2">
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Project Type</label>
+              <select
+                name="projectType"
+                value={formData.projectType}
+                onChange={handleChange}
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+              >
+                <option value="">Select Project Type</option>
+                <option value="Object & Sculpture">Object & Sculpture</option>
+                <option value="Architecture">Architecture</option>
+                <option value="Interior Design">Interior Design</option>
+                <option value="Landscape">Landscape</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Use Type</label>
+              <input
+                type="text"
+                name="useType"
+                value={formData.useType}
+                onChange={handleChange}
+                placeholder="e.g., Health & Wellbeing, Leisure & Recreation"
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2 flex flex-col gap-2">
+              <label className="!mb-1 font-bold text-black text-lg md:text-xl">Description/Story</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 required
-                className="px-4 py-3 md:px-6 md:py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg focus:border-black focus:ring-2 focus:ring-black/10"
+                className="!px-4 !py-3 md:!px-6 md:!py-4 border border-gray-300 rounded-lg text-black w-full bg-white text-base md:text-lg focus:border-black focus:ring-2 focus:ring-black/10"
                 rows={5}
               />
             </div>
@@ -257,7 +420,7 @@ const AddProject = () => {
               />
               <label
                 htmlFor="cover-img"
-                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black px-6 py-3 rounded-lg shadow font-medium transition"
+                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black !px-6 !py-3 rounded-lg shadow font-medium transition"
                 title="Upload Cover Image"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -272,7 +435,7 @@ const AddProject = () => {
                 <img
                   src={URL.createObjectURL(cimg)}
                   alt="Cover Preview"
-                  className="w-32 h-20 md:w-44 md:h-28 object-cover rounded border ml-2"
+                  className="w-32 h-20 md:w-44 md:h-28 object-cover rounded border !ml-2"
                 />
               )}
             </div>
@@ -293,7 +456,7 @@ const AddProject = () => {
               />
               <label
                 htmlFor="interior-imgs"
-                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black px-6 py-3 rounded-lg shadow font-medium transition"
+                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black !px-6 !py-3 rounded-lg shadow font-medium transition"
                 title="Upload Interior Images"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,7 +469,7 @@ const AddProject = () => {
                   ? `${interiorFiles.length} file${interiorFiles.length > 1 ? "s" : ""} selected`
                   : "No files chosen"}
               </span>
-              <div className="flex flex-wrap gap-3 mt-2">
+              <div className="flex flex-wrap gap-3 !mt-2">
                 {interiorFiles.map((file, idx) => (
                   <img
                     key={idx}
@@ -334,7 +497,7 @@ const AddProject = () => {
               />
               <label
                 htmlFor="exterior-imgs"
-                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black px-6 py-3 rounded-lg shadow font-medium transition"
+                className="cursor-pointer flex items-center gap-2 bg-white border border-gray-400 hover:bg-gray-100 text-black !px-6 !py-3 rounded-lg shadow font-medium transition"
                 title="Upload Exterior Images"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -347,7 +510,7 @@ const AddProject = () => {
                   ? `${exteriorFiles.length} file${exteriorFiles.length > 1 ? "s" : ""} selected`
                   : "No files chosen"}
               </span>
-              <div className="flex flex-wrap gap-3 mt-2">
+              <div className="flex flex-wrap gap-3 !mt-2">
                 {exteriorFiles.map((file, idx) => (
                   <img
                     key={idx}

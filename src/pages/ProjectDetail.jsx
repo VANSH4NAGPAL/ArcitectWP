@@ -1,389 +1,165 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa';
-import Navigation from '../components/Navigation';
-import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import '../App.css';
 
 function ProjectDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const numericId = Number(id);
-  const titleRef = useRef(null);
-  const lineRef = useRef(null);
-  const [hoveredProject, setHoveredProject] = useState(null);
-  const [modalImages, setModalImages] = useState(null);
-  const [modalIndex, setModalIndex] = useState(0);
-  const [showMobileNav, setShowMobileNav] = useState(false);
-  const [showSections, setShowSections] = useState(true);
-
-  // Fetch all projects from Firestore
   const [allProjects, setAllProjects] = useState([]);
+  const scrollRef = useRef(null);
+
+  // Get the background color from URL params
+  const backgroundColor = searchParams.get('color') || '#f9fafb';
+
+  // Fetch projects
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "projects"), (snapshot) => {
-      const data = snapshot.docs.map((docSnap) => ({
-        docId: docSnap.id,
-        ...docSnap.data(),
+    const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        docId: doc.id,
+        ...doc.data(),
       }));
       setAllProjects(data);
     });
     return () => unsub();
   }, []);
 
-  // Find current project by id
-  const currentProject = allProjects.find(p => Number(p.id) === numericId);
+  // Find current project and get all images
+  const currentProject = allProjects.find((p) => {
+    if (p.docId === id) return true;
+    if (!isNaN(numericId) && p.id === numericId) return true;
+    return false;
+  });
 
-  // Helper: get exterior/interior images as "projects"
-  const exteriorProjects = currentProject?.exteriorImages?.map((url, idx) => ({
-    id: `exterior-${idx}`,
-    mainImage: url,
-    hoverImage: url,
-    title: currentProject.title,
-  })) || [];
-  const interiorProjects = currentProject?.interiorImages?.map((url, idx) => ({
-    id: `interior-${idx}`,
-    mainImage: url,
-    hoverImage: url,
-    title: currentProject.title,
-  })) || [];
+  const interiorImages = currentProject?.interiorImages || [];
+  const exteriorImages = currentProject?.exteriorImages || [];
+  const allImages = [...interiorImages, ...exteriorImages];
 
-  // --- Modal for Images ---
-  const ImageModal = ({ images, onClose }) => {
-    if (!images) return null;
-    const imageList = [{ src: images.main }, { src: images.hover }];
-    const [direction, setDirection] = useState(0);
-    // Remove animation variants
-    const handleNext = (e) => {
-      e.stopPropagation();
-      setDirection(1);
-      setModalIndex((prev) => (prev + 1) % imageList.length);
+  // Different image size configurations for gallery effect
+  const getImageSize = (index) => {
+    const patterns = [
+      { width: 'w-[700px]', height: 'h-[500px]' }, // Large
+      { width: 'w-[450px]', height: 'h-[350px]' }, // Medium
+      { width: 'w-[600px]', height: 'h-[400px]' }, // Medium-Large
+      { width: 'w-[400px]', height: 'h-[480px]' }, // Tall
+      { width: 'w-[650px]', height: 'h-[420px]' }, // Wide
+      { width: 'w-[380px]', height: 'h-[300px]' }, // Small
+    ];
+    return patterns[index % patterns.length];
+  };
+
+  // Mouse wheel horizontal scroll
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
+
+    const handleWheel = (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const scrollSpeed = 3; // Increased scroll speed for more responsiveness
+        const newScrollLeft = scrollElement.scrollLeft + e.deltaY * scrollSpeed;
+        
+        // Clamp to scroll bounds
+        const maxScroll = scrollElement.scrollWidth - scrollElement.clientWidth;
+        scrollElement.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScroll));
+      }
     };
-    const handlePrev = (e) => {
-      e.stopPropagation();
-      setDirection(-1);
-      setModalIndex((prev) => (prev + imageList.length - 1) % imageList.length);
+
+    scrollElement.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      scrollElement.removeEventListener('wheel', handleWheel);
     };
+  }, [allImages.length]);
+
+  if (allProjects.length === 0) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{ background: "rgba(0,0,0,0.92)", cursor: "pointer" }}
-        onClick={onClose}
-      >
-        <div
-          className="relative flex items-center justify-center"
-          onClick={e => e.stopPropagation()}
-          style={{
-            width: 'min(90vw, 90vh)',
-            height: 'min(90vw, 90vh)',
-            maxWidth: 800,
-            maxHeight: 800,
-            background: 'transparent',
-            borderRadius: '2rem',
-            boxShadow: 'none',
-            overflow: 'hidden',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-black text-3xl font-bold bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow transition"
-            onClick={onClose}
-            aria-label="Close"
-            style={{ zIndex: 10, backdropFilter: 'blur(4px)', border: 'none', cursor: 'pointer' }}
-          >
-            &times;
-          </button>
-          <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
-            onClick={handlePrev}
-            style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
-            aria-label="Previous"
-          >
-            <span style={{ fontWeight: 700, fontSize: 28 }}>&#8592;</span>
-          </button>
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-gray-200 text-gray-700 hover:text-black rounded-full w-12 h-12 flex items-center justify-center shadow transition text-2xl"
-            onClick={handleNext}
-            style={{ zIndex: 10, border: 'none', cursor: 'pointer' }}
-            aria-label="Next"
-          >
-            <span style={{ fontWeight: 700, fontSize: 28 }}>&#8594;</span>
-          </button>
-          <img
-            key={modalIndex}
-            src={imageList[modalIndex].src}
-            alt=""
-            className="object-contain w-full h-full rounded-2xl"
-            style={{
-              background: 'transparent',
-              boxShadow: '0 4px 32px 0 rgba(0,0,0,0.10)',
-              cursor: 'default'
-            }}
-          />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl font-semibold">Loading project...</div>
+      </div>
+    );
+  }
+
+  if (!currentProject) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold !mb-4">Project Not Found</h1>
+          <p className="text-gray-600 !mb-4">
+            Project with ID "{id}" does not exist.
+          </p>
         </div>
       </div>
     );
-  };
-
-  const ProjectCard = ({ project }) => (
-    <div
-      className="relative cursor-pointer group !mb-8 sm:!mb-12 md:!mb-16"
-      onMouseEnter={() => setHoveredProject(project.id)}
-      onMouseLeave={() => setHoveredProject(null)}
-      onClick={() => {
-        setModalImages({ main: project.mainImage, hover: project.hoverImage });
-        setModalIndex(0);
-      }}
-    >
-      <div
-        className="relative overflow-hidden bg-gray-100 !mb-4  shadow"
-        style={{
-          width: '360px',
-          height: '543px',
-          maxWidth: '90vw',
-          maxHeight: '90vw',
-          aspectRatio: '1/1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <img
-          src={project.mainImage}
-          alt={project.title}
-          className="w-full h-full object-cover transition-all duration-300"
-          style={{
-            opacity: hoveredProject === project.id ? 0 : 1,
-            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)'
-          }}
-        />
-        <img
-          src={project.hoverImage}
-          alt={project.title}
-          className="w-full h-full object-cover absolute inset-0 transition-all duration-300"
-          style={{
-            opacity: hoveredProject === project.id ? 1 : 0,
-            transform: hoveredProject === project.id ? 'scale(1.03)' : 'scale(1)'
-          }}
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none"
-          style={{
-            opacity: hoveredProject === project.id ? 1 : 0
-          }}
-        />
-      </div>
-    </div>
-  );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-x-hidden">
-      {/* Mobile Navigation */}
-      <button
-        className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
-        onClick={() => setShowMobileNav(true)}
-        aria-label="Open navigation"
-        style={{ transition: 'none' }}
-      >
-        <span>
-          <FaBars className="text-2xl text-gray-800" />
-        </span>
-      </button>
-      {showMobileNav && (
-        <div
-          className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col items-center justify-center"
-        >
-          <button
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-            onClick={() => setShowMobileNav(false)}
-            aria-label="Close navigation"
-            style={{ transition: 'none' }}
-          >
-            <span className="text-2xl text-gray-800">&times;</span>
-          </button>
-          <div>
-            <Navigation textColor="black" />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="w-full lg:w-[100%] flex flex-col lg:h-screen overflow-x-hidden ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center"
-      style={{ willChange: "transform, opacity" }}>
-        <div className="w-full flex">
-          <div className='!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%]'>
-            {/* --- New Title and Underline Block --- */}
-            <div
-            className="relative flex flex-col items-start justify-start w-full !mb-8 sm:!mb-10 lg:!mb-12"
-            style={{
-              position: "relative",
-              width: "100%",
-              background: "transparent",
-              zIndex: 10,
-              marginTop: "2.5rem",
-              marginLeft: "0.5rem",
+    <div className="min-h-screen" style={{ backgroundColor }}>
+      {/* All Images Horizontal Scroll */}
+      {allImages.length > 0 && (
+        <div className="w-full h-screen flex items-center !py-12">
+          <div 
+            ref={scrollRef}
+            className="overflow-x-auto overflow-y-hidden scroll-smooth w-full"
+            style={{ 
+              height: 'calc(100vh - 96px)', // Account for padding
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#888 transparent',
+              willChange: 'scroll-position',
+              transform: 'translateZ(0)'
             }}
           >
-            <h1
-              ref={titleRef}
-              className="font-light tracking-tight text-gray-900 lowercase !mb-4 !mt-5"
-              style={{
-                fontWeight: 700,
-                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
-                letterSpacing: '0.1em',
-                lineHeight: 1.08,
-                marginBottom: '0.2rem',
-                background: 'transparent',
-                width: 'auto',
-                maxWidth: '90vw',
-                textAlign: 'left',
-                zIndex: 70,
-                color: '#111',
-                opacity: 1,
-                transform: 'translateX(0px)',
-                paddingLeft: 0,
-              }}
-            >
-              project details
-            </h1>
-            <div
-              ref={lineRef}
-              className="!mt-1"
-              style={{
-                opacity: 1,
-                zIndex: 10,
-                width: '38%',                // full width underline
-                maxWidth: '100vw',
-                height: '1px',                // thinnest possible
-                background: '#222',
-                left: 0,
-                transform: 'scaleX(1)',
-                transformOrigin: 'left center',
-                position: 'relative',
-                marginLeft: 0,
-                borderRadius: '1px',
-              }}
-            />
-          </div>
+             <div className="flex gap-6 items-center !px-8" style={{ 
+              width: 'max-content',
+              height: '100%',
+              backfaceVisibility: 'hidden',
+              perspective: '1000px'
+            }}>
+              {allImages.map((imageUrl, idx) => {
+                const { width, height } = getImageSize(idx);
+                const isLarge = width.includes('700') || height.includes('500');
+                
+                return (
+                  <div
+                    key={idx}
+                    className={`flex-shrink-0 ${width} ${height} rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 ${
+                      isLarge ? 'ring-2 ring-white/20' : ''
+                    }`}
+                    style={{
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      transform: `translateY(${Math.sin(idx * 0.5) * 15}px)` // Reduced vertical offset
+                    }}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`Project Image ${idx + 1}`}
+                      className="w-full h-full object-cover bg-center hover:scale-110 transition-transform duration-700 cursor-pointer"
+                      style={{
+                        willChange: 'transform',
+                        backfaceVisibility: 'hidden',
+                        filter: 'brightness(0.95) contrast(1.05)',
+                        transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                      loading="lazy"
+                      onMouseEnter={(e) => {
+                        e.target.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.filter = 'brightness(0.95) contrast(1.05)';
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-        {showSections && (
-          <div className="flex flex-col lg:flex-row w-full h-full">
-            {/* Exterior Section */}
-            {exteriorProjects.length > 0 && (
-              <div className="w-full lg:w-1/2 lg:border-r lg:border-gray-200 lg:h-full overflow-y-auto">
-                <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 sm:!pt-24 lg:!pt-20 flex justify-center sm:!mt-16 lg:!mt-0">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                      style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                    >
-                      <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                        {exteriorProjects.map((project, index) => (
-                          <div
-                            key={project.id}
-                            className="relative flex-shrink-0"
-                          >
-                            {index === 0 && (
-                              <div
-                                className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] !text-black font-bold"
-                              >
-                                EXTERIOR
-                              </div>
-                            )}
-                            <ProjectCard project={project} />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                        {exteriorProjects.map((project, index) => (
-                          <div
-                            key={project.id}
-                            className="relative"
-                          >
-                            {index === 0 && (
-                              <div
-                                className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
-                                style={{ transformOrigin: 'center' }}
-                              >
-                                EXTERIOR
-                              </div>
-                            )}
-                            <ProjectCard project={project} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {/* Interior Section */}
-            {interiorProjects.length > 0 && (
-              <div className={`w-full ${exteriorProjects.length > 0 ? 'lg:w-1/2' : ''} lg:h-full overflow-y-auto !mt-12 sm:!mt-16 lg:!mt-0`}>
-                <div className="!px-6 sm:!px-8 lg:!px-12 !py-8 sm:!py-12 lg:!py-20 !pt-8 sm:!pt-12 lg:!pt-20 flex justify-center">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="flex flex-col items-center relative !gap-8 sm:!gap-12 lg:!gap-16"
-                      style={{ marginTop: '2rem sm:3rem lg:4rem' }}
-                    >
-                      <div className="lg:hidden flex flex-col gap-8 sm:gap-12 overflow-x-auto w-full justify-start px-4">
-                        {interiorProjects.map((project, index) => (
-                          <div
-                            key={project.id}
-                            className="relative flex-shrink-0"
-                          >
-                            {index === 0 && (
-                              <div
-                                className="sticky left-0 top-[-25px] text-[10px] sm:text-xs tracking-[0.3em] text-black font-bold"
-                              >
-                                INTERIOR
-                              </div>
-                            )}
-                            <ProjectCard project={project} />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="hidden lg:flex lg:flex-col items-center gap-16">
-                        {interiorProjects.map((project, index) => (
-                          <div
-                            key={project.id}
-                            className="relative"
-                          >
-                            {index === 0 && (
-                              <div
-                                className="absolute left-[-110px] top-6 sm:top-8 text-l tracking-[0.3em] text-black font-bold transform -rotate-90"
-                                style={{ transformOrigin: 'center' }}
-                              >
-                                INTERIOR
-                              </div>
-                            )}
-                            <ProjectCard project={project} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      {modalImages && (
-        <ImageModal images={modalImages} onClose={() => setModalImages(null)} />
       )}
-      <style jsx>{`
-        .border-r { border-right: 1px solid #d1d5db; }
-        .overflow-y-auto::-webkit-scrollbar, .overflow-x-auto::-webkit-scrollbar { display: none; }
-        .overflow-y-auto, .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
-        .typing-indicator {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 }

@@ -23,6 +23,18 @@ const EditProject = () => {
       setFormData({
         ...project,
         year: project.year || "",
+        client: project.client || "",
+        size: project.size || "",
+        projectDates: project.projectDates || {
+          design: "",
+          fabrication: "",
+          opening: ""
+        },
+        servicesProvided: project.servicesProvided || "",
+        designTeam: project.designTeam || "",
+        projectType: project.projectType || "",
+        useType: project.useType || "",
+        customCategory: project.customCategory || "",
       });
       setCimg(null);
       setInteriorFiles([]);
@@ -351,10 +363,12 @@ const EditProject = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["title", "area", "year", "location", "category", "type"].map((field) => (
+            {["title", "client", "area", "size", "year", "location", "type"].map((field) => (
               <div key={field}>
                 <label className="!mb-1 font-medium text-black">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
+                  {field === "client" ? "Client" : 
+                   field === "size" ? "Size (m²)" :
+                   field.charAt(0).toUpperCase() + field.slice(1)}
                 </label>
                 <input
                   type={field === "year" ? "number" : "text"}
@@ -366,8 +380,144 @@ const EditProject = () => {
                 />
               </div>
             ))}
+
+            {/* Category */}
+            <div>
+              <label className="!mb-1 font-medium text-black">Category</label>
+              <select
+                name="category"
+                value={formData.category || ""}
+                onChange={handleChange}
+                required
+                className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+              >
+                <option value="">Select Category</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Public Institution">Public Institution</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Custom Category Input - Only show if "Other" is selected */}
+            {formData.category === "Other" && (
+              <div>
+                <label className="!mb-1 font-medium text-black">Custom Category</label>
+                <input
+                  type="text"
+                  name="customCategory"
+                  value={formData.customCategory || ""}
+                  onChange={handleChange}
+                  placeholder="Enter custom category"
+                  required
+                  className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                />
+              </div>
+            )}
+
+            {/* Project Dates */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="!mb-1 font-medium text-black">Design Date</label>
+                <input
+                  type="text"
+                  name="designDate"
+                  value={formData.projectDates?.design || ""}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, design: e.target.value }
+                  }))}
+                  placeholder="e.g., April 2019 - May 2020"
+                  className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                />
+              </div>
+              <div>
+                <label className="!mb-1 font-medium text-black">Fabrication & Installation</label>
+                <input
+                  type="text"
+                  name="fabricationDate"
+                  value={formData.projectDates?.fabrication || ""}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, fabrication: e.target.value }
+                  }))}
+                  placeholder="e.g., June 2020 - August 2020"
+                  className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                />
+              </div>
+              <div>
+                <label className="!mb-1 font-medium text-black">Opening Date</label>
+                <input
+                  type="text"
+                  name="openingDate"
+                  value={formData.projectDates?.opening || ""}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    projectDates: { ...prev.projectDates, opening: e.target.value }
+                  }))}
+                  placeholder="e.g., September 2020"
+                  className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                />
+              </div>
+            </div>
+
+            {/* Services Provided */}
             <div className="md:col-span-2">
-              <label className="!mb-1 font-medium text-black">Description</label>
+              <label className="!mb-1 font-medium text-black">Services Provided</label>
+              <textarea
+                name="servicesProvided"
+                value={formData.servicesProvided || ""}
+                onChange={handleChange}
+                placeholder="e.g., Architectural Installation Concept and Developed Design (RIBA St 2-4a)"
+                className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                rows={3}
+              />
+            </div>
+
+            {/* Design Team */}
+            <div className="md:col-span-2">
+              <label className="!mb-1 font-medium text-black">Design Team</label>
+              <textarea
+                name="designTeam"
+                value={formData.designTeam || ""}
+                onChange={handleChange}
+                placeholder="e.g., Tom Massey (Horticulture), Cake Industries (Fabrication)"
+                className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+                rows={3}
+              />
+            </div>
+
+            {/* Project Type and Use Type */}
+            <div>
+              <label className="!mb-1 font-medium text-black">Project Type</label>
+              <select
+                name="projectType"
+                value={formData.projectType || ""}
+                onChange={handleChange}
+                className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+              >
+                <option value="">Select Project Type</option>
+                <option value="Object & Sculpture">Object & Sculpture</option>
+                <option value="Architecture">Architecture</option>
+                <option value="Interior Design">Interior Design</option>
+                <option value="Landscape">Landscape</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="!mb-1 font-medium text-black">Use Type</label>
+              <input
+                type="text"
+                name="useType"
+                value={formData.useType || ""}
+                onChange={handleChange}
+                placeholder="e.g., Health & Wellbeing, Leisure & Recreation"
+                className="!px-4 !py-2 border border-gray-300 rounded-md text-black w-full"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="!mb-1 font-medium text-black">Description/Story</label>
               <textarea
                 name="description"
                 value={formData.description || ""}

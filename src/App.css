@@ -1,9 +1,84 @@
-/* Remove all focus outlines */
-button:focus,
+/* Remove all focus outlin/* Add project appear animation for filter transitions */
+@keyframes projectAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-project-appear {
+  animation: projectAppear 0.5s ease-out;
+}
+
+/* Prevent visual artifacts during animations */
+.project-card {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform, left, top, opacity;
+}
+
+/* Smooth transitions for project cards */
+.project-card.animating {
+  transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              top 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              opacity 0.3s ease;
+}
+
+/* Add a subtle fade-in for the entire whiteboard */us,
 button:focus-visible,
 *:focus,
 *:focus-visible {
   outline: none !important;
   box-shadow: none !important;
   border: none !important;
+}
+
+
+
+/* Optional: Add a more subtle shimmer effect for loading skeletons */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Add project appear animation for filter transitions */
+@keyframes projectAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-project-appear {
+  animation: projectAppear 0.5s ease-out;
+}
+
+/* Add a subtle fade-in for the entire whiteboard */
+@keyframes whiteboardFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.whiteboard-container {
+  animation: whiteboardFadeIn 0.5s ease-out;
 }
