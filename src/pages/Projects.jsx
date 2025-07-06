@@ -370,10 +370,7 @@ function Projects() {
 
   // Pinch-to-zoom support for touch devices (now global)
   useEffect(() => {
-    // Attach to document instead of container for global pinch
-    const container = containerRef.current;
-    if (!container) return;
-
+    // Attach to document for global pinch
     let lastDistance = null;
     let pinchStartScale = null;
     let pinchStartTransform = null;
@@ -408,10 +405,9 @@ function Projects() {
         const scaleFactor = newDistance / lastDistance;
         let newScale = pinchStartScale * scaleFactor;
         newScale = Math.max(0.3, Math.min(2, newScale));
-        // Center zoom on initial midpoint between fingers (relative to container)
-        const containerRect = container.getBoundingClientRect();
-        const midX = pinchMidpoint.x - containerRect.left;
-        const midY = pinchMidpoint.y - containerRect.top;
+        // Center zoom on initial midpoint between fingers (relative to viewport)
+        const midX = pinchMidpoint.x;
+        const midY = pinchMidpoint.y;
         const currentTransform = pinchStartTransform;
         const newTransform = {
           ...currentTransform,
@@ -432,15 +428,18 @@ function Projects() {
       }
     }
 
-    // Attach to document for global pinch
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    // Prevent default pinch-zoom on the whole page
+    document.body.style.touchAction = 'none';
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      document.body.style.touchAction = '';
     };
   }, [constrainTransform]);
 
