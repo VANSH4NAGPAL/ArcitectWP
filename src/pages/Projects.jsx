@@ -235,7 +235,8 @@ function Projects() {
   // Mouse and touch handlers
   const handleMouseDown = useCallback((e) => {
     if (showMobileNav) return;
-    // Allow drag from anywhere on the container (not just whiteboard)
+    // Only allow drag with left mouse button
+    if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
     const currentTransform = transformRef.current;
     dragStateRef.current = {
@@ -375,6 +376,7 @@ function Projects() {
     let lastDistance = null;
     let pinchStartScale = null;
     let pinchStartTransform = null;
+    let pinchMidpoint = null;
 
     function getDistance(touches) {
       const dx = touches[0].clientX - touches[1].clientX;
@@ -382,31 +384,37 @@ function Projects() {
       return Math.sqrt(dx * dx + dy * dy);
     }
 
+    function getMidpoint(touches, rect) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2 - rect.left,
+        y: (touches[0].clientY + touches[1].clientY) / 2 - rect.top
+      };
+    }
+
     function handleTouchStart(e) {
       if (e.touches.length === 2) {
         lastDistance = getDistance(e.touches);
         pinchStartScale = transformRef.current.scale;
         pinchStartTransform = { ...transformRef.current };
+        const rect = container.getBoundingClientRect();
+        pinchMidpoint = getMidpoint(e.touches, rect);
       }
     }
 
     function handleTouchMove(e) {
-      if (e.touches.length === 2 && lastDistance && pinchStartScale) {
+      if (e.touches.length === 2 && lastDistance && pinchStartScale && pinchMidpoint) {
         e.preventDefault();
         const newDistance = getDistance(e.touches);
         const scaleFactor = newDistance / lastDistance;
         let newScale = pinchStartScale * scaleFactor;
         newScale = Math.max(0.3, Math.min(2, newScale));
-        // Center zoom on midpoint between fingers
-        const rect = container.getBoundingClientRect();
-        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        // Center zoom on initial midpoint between fingers
         const currentTransform = pinchStartTransform;
         const newTransform = {
           ...currentTransform,
           scale: newScale,
-          x: midX - (midX - currentTransform.x) * (newScale / currentTransform.scale),
-          y: midY - (midY - currentTransform.y) * (newScale / currentTransform.scale),
+          x: pinchMidpoint.x - (pinchMidpoint.x - currentTransform.x) * (newScale / currentTransform.scale),
+          y: pinchMidpoint.y - (pinchMidpoint.y - currentTransform.y) * (newScale / currentTransform.scale),
         };
         setTransform(constrainTransform(newTransform));
       }
@@ -417,6 +425,7 @@ function Projects() {
         lastDistance = null;
         pinchStartScale = null;
         pinchStartTransform = null;
+        pinchMidpoint = null;
       }
     }
 
@@ -464,9 +473,7 @@ function Projects() {
         height: cardHeight,
         zIndex: animationPhase === 'scrambling' ? 10 : 1,
         opacity: animationPhase === 'scrambling' ? 0.8 : 1,
-        transition: animationPhase === 'sliding' 
-          ? 'left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease' 
-          : animationPhase === 'scrambling'
+        transition: animationPhase === 'scrambling' 
           ? 'opacity 0.2s ease'
           : 'all 0.3s ease',
         transitionDelay: animationPhase === 'sliding' ? `${Math.random() * 0.1}s` : '0s',
@@ -686,19 +693,6 @@ function Projects() {
               );
             })}
           </div>
-        </div>
-        {/* End Whiteboard Content */}
-
-        {/* Zoom Controls */}
-        <div className="fixed bottom-8 right-8 z-30 flex flex-col gap-2">
-          <button
-            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-            onClick={resetView}
-            aria-label="Reset view"
-            style={{ cursor: 'pointer' }}
-          >
-            <FaExpand className="text-gray-700" />
-          </button>
         </div>
       </div>
     </div>
