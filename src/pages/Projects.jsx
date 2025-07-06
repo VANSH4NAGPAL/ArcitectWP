@@ -31,6 +31,7 @@ function Projects() {
   const [animationPhase, setAnimationPhase] = useState('idle');
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
 
   const dragStateRef = useRef({
     isDragging: false,
@@ -251,8 +252,9 @@ function Projects() {
 
   const handleTouchStart = useCallback((e) => {
     if (showMobileNav) return;
-    if (e.touches.length === 1) {
-      // Single finger drag from anywhere
+    
+    if (e.touches.length === 1 && !isPinching) {
+      // Single finger drag
       const touch = e.touches[0];
       const currentTransform = transformRef.current;
       dragStateRef.current = {
@@ -263,14 +265,18 @@ function Projects() {
         initialTransformY: currentTransform.y
       };
       setIsDragging(true);
+    } else if (e.touches.length === 2) {
+      // Two finger pinch - stop dragging
+      dragStateRef.current.isDragging = false;
+      setIsDragging(false);
+      setIsPinching(true);
     }
-    // Pinch handled in effect below
-  }, [showMobileNav]);
+  }, [showMobileNav, isPinching]);
 
   // Global event listeners for dragging
   useEffect(() => {
     const handleGlobalMouseMove = (e) => {
-      if (showMobileNav || !dragStateRef.current.isDragging) return;
+      if (showMobileNav || !dragStateRef.current.isDragging || isPinching) return;
       e.preventDefault();
       
       const deltaX = e.clientX - dragStateRef.current.startX;
@@ -293,7 +299,7 @@ function Projects() {
     };
 
     const handleGlobalTouchMove = (e) => {
-      if (showMobileNav || !dragStateRef.current.isDragging) return;
+      if (showMobileNav || !dragStateRef.current.isDragging || isPinching) return;
       e.preventDefault();
       
       const touch = e.touches[0];
@@ -309,10 +315,17 @@ function Projects() {
       setTransform(constrainTransform(newTransform));
     };
 
-    const handleGlobalTouchEnd = () => {
-      if (dragStateRef.current.isDragging) {
-        dragStateRef.current.isDragging = false;
-        setIsDragging(false);
+    const handleGlobalTouchEnd = (e) => {
+      if (e.touches.length === 0) {
+        // All fingers lifted
+        if (dragStateRef.current.isDragging) {
+          dragStateRef.current.isDragging = false;
+          setIsDragging(false);
+        }
+        setIsPinching(false);
+      } else if (e.touches.length === 1 && isPinching) {
+        // Went from pinch to single finger
+        setIsPinching(false);
       }
     };
 
@@ -323,7 +336,6 @@ function Projects() {
       document.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
       
       document.body.style.userSelect = 'none';
-      document.body.style.overflow = 'hidden';
     }
 
     return () => {
@@ -334,10 +346,9 @@ function Projects() {
         document.removeEventListener('touchend', handleGlobalTouchEnd);
         
         document.body.style.userSelect = '';
-        document.body.style.overflow = '';
       }
     };
-  }, [isDragging, constrainTransform, showMobileNav]);
+  }, [isDragging, constrainTransform, showMobileNav, isPinching]);
 
   // Wheel event for zooming
   useEffect(() => {
@@ -368,9 +379,8 @@ function Projects() {
     return () => container.removeEventListener('wheel', handleWheelEvent);
   }, [constrainTransform]);
 
-  // Pinch-to-zoom support for touch devices (now global)
+  // Pinch-to-zoom support for touch devices - FIXED VERSION
   useEffect(() => {
-    // Attach to document for global pinch
     let lastDistance = null;
     let pinchStartScale = null;
     let pinchStartTransform = null;
@@ -391,30 +401,43 @@ function Projects() {
 
     function handleTouchStart(e) {
       if (e.touches.length === 2) {
+        e.preventDefault();
         lastDistance = getDistance(e.touches);
         pinchStartScale = transformRef.current.scale;
         pinchStartTransform = { ...transformRef.current };
         pinchMidpoint = getMidpoint(e.touches);
+        setIsPinching(true);
+        
+        // Stop any ongoing drag
+        if (dragStateRef.current.isDragging) {
+          dragStateRef.current.isDragging = false;
+          setIsDragging(false);
+        }
       }
     }
 
     function handleTouchMove(e) {
-      if (e.touches.length === 2 && lastDistance && pinchStartScale && pinchMidpoint) {
+      if (e.touches.length === 2 && lastDistance && pinchStartScale && pinchMidpoint && isPinching) {
         e.preventDefault();
+        e.stopPropagation();
+        
         const newDistance = getDistance(e.touches);
         const scaleFactor = newDistance / lastDistance;
         let newScale = pinchStartScale * scaleFactor;
         newScale = Math.max(0.3, Math.min(2, newScale));
-        // Center zoom on initial midpoint between fingers (relative to viewport)
+        
+        // Center zoom on initial midpoint between fingers
         const midX = pinchMidpoint.x;
         const midY = pinchMidpoint.y;
         const currentTransform = pinchStartTransform;
+        
         const newTransform = {
           ...currentTransform,
           scale: newScale,
           x: midX - (midX - currentTransform.x) * (newScale / currentTransform.scale),
           y: midY - (midY - currentTransform.y) * (newScale / currentTransform.scale),
         };
+        
         setTransform(constrainTransform(newTransform));
       }
     }
@@ -425,23 +448,54 @@ function Projects() {
         pinchStartScale = null;
         pinchStartTransform = null;
         pinchMidpoint = null;
+        setIsPinching(false);
       }
     }
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    // Prevent default pinch-zoom on the whole page
-    document.body.style.touchAction = 'none';
+    // Attach to window for better coverage
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.body.style.touchAction = '';
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [constrainTransform]);
+  }, [constrainTransform, isPinching]);
+
+  // Prevent default browser zoom behavior
+  useEffect(() => {
+    const preventZoom = (e) => {
+      if (e.touches && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const preventGestureZoom = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchstart', preventZoom, { passive: false });
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+    document.addEventListener('gesturestart', preventGestureZoom, { passive: false });
+    document.addEventListener('gesturechange', preventGestureZoom, { passive: false });
+    document.addEventListener('gestureend', preventGestureZoom, { passive: false });
+
+    // Set viewport meta tag to prevent default zoom
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    }
+
+    return () => {
+      document.removeEventListener('touchstart', preventZoom);
+      document.removeEventListener('touchmove', preventZoom);
+      document.removeEventListener('gesturestart', preventGestureZoom);
+      document.removeEventListener('gesturechange', preventGestureZoom);
+      document.removeEventListener('gestureend', preventGestureZoom);
+    };
+  }, []);
 
   // Zoom controls
   const resetView = useCallback(() => {
