@@ -370,8 +370,8 @@ function Projects() {
 
   // Pinch-to-zoom support for touch devices
   useEffect(() => {
-    // Listen on the whole document for pinch gestures
-    const target = document;
+    const container = containerRef.current;
+    if (!container) return;
 
     let lastDistance = null;
     let pinchStartScale = null;
@@ -408,7 +408,7 @@ function Projects() {
         let newScale = pinchStartScale * scaleFactor;
         newScale = Math.max(0.3, Math.min(2, newScale));
         // Center zoom on initial midpoint between fingers (relative to container)
-        const containerRect = containerRef.current.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
         const midX = pinchMidpoint.x - containerRect.left;
         const midY = pinchMidpoint.y - containerRect.top;
         const currentTransform = pinchStartTransform;
@@ -431,14 +431,14 @@ function Projects() {
       }
     }
 
-    target.addEventListener('touchstart', handleTouchStart, { passive: false });
-    target.addEventListener('touchmove', handleTouchMove, { passive: false });
-    target.addEventListener('touchend', handleTouchEnd, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      target.removeEventListener('touchstart', handleTouchStart);
-      target.removeEventListener('touchmove', handleTouchMove);
-      target.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, [constrainTransform]);
 
