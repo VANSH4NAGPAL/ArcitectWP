@@ -368,8 +368,9 @@ function Projects() {
     return () => container.removeEventListener('wheel', handleWheelEvent);
   }, [constrainTransform]);
 
-  // Pinch-to-zoom support for touch devices
+  // Pinch-to-zoom support for touch devices (now global)
   useEffect(() => {
+    // Attach to document instead of container for global pinch
     const container = containerRef.current;
     if (!container) return;
 
@@ -431,14 +432,15 @@ function Projects() {
       }
     }
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    // Attach to document for global pinch
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [constrainTransform]);
 
