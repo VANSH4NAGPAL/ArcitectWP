@@ -370,8 +370,8 @@ function Projects() {
 
   // Pinch-to-zoom support for touch devices
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    // Listen on the whole document for pinch gestures
+    const target = document;
 
     let lastDistance = null;
     let pinchStartScale = null;
@@ -384,10 +384,10 @@ function Projects() {
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    function getMidpoint(touches, rect) {
+    function getMidpoint(touches) {
       return {
-        x: (touches[0].clientX + touches[1].clientX) / 2 - rect.left,
-        y: (touches[0].clientY + touches[1].clientY) / 2 - rect.top
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
       };
     }
 
@@ -396,8 +396,7 @@ function Projects() {
         lastDistance = getDistance(e.touches);
         pinchStartScale = transformRef.current.scale;
         pinchStartTransform = { ...transformRef.current };
-        const rect = container.getBoundingClientRect();
-        pinchMidpoint = getMidpoint(e.touches, rect);
+        pinchMidpoint = getMidpoint(e.touches);
       }
     }
 
@@ -408,13 +407,16 @@ function Projects() {
         const scaleFactor = newDistance / lastDistance;
         let newScale = pinchStartScale * scaleFactor;
         newScale = Math.max(0.3, Math.min(2, newScale));
-        // Center zoom on initial midpoint between fingers
+        // Center zoom on initial midpoint between fingers (relative to container)
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const midX = pinchMidpoint.x - containerRect.left;
+        const midY = pinchMidpoint.y - containerRect.top;
         const currentTransform = pinchStartTransform;
         const newTransform = {
           ...currentTransform,
           scale: newScale,
-          x: pinchMidpoint.x - (pinchMidpoint.x - currentTransform.x) * (newScale / currentTransform.scale),
-          y: pinchMidpoint.y - (pinchMidpoint.y - currentTransform.y) * (newScale / currentTransform.scale),
+          x: midX - (midX - currentTransform.x) * (newScale / currentTransform.scale),
+          y: midY - (midY - currentTransform.y) * (newScale / currentTransform.scale),
         };
         setTransform(constrainTransform(newTransform));
       }
@@ -429,14 +431,14 @@ function Projects() {
       }
     }
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    target.addEventListener('touchstart', handleTouchStart, { passive: false });
+    target.addEventListener('touchmove', handleTouchMove, { passive: false });
+    target.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      target.removeEventListener('touchstart', handleTouchStart);
+      target.removeEventListener('touchmove', handleTouchMove);
+      target.removeEventListener('touchend', handleTouchEnd);
     };
   }, [constrainTransform]);
 
