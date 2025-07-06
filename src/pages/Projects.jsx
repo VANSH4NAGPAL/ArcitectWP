@@ -26,7 +26,7 @@ function Projects() {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [activeCategories, setActiveCategories] = useState([]);
   const [allProjects, setAllProjects] = useState([]);
-  const [whiteboardBgColor] = useState('#ffffff');
+  const [whiteboardBgColor] = useState('#FAF9F6');
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationPhase, setAnimationPhase] = useState('idle');
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -191,7 +191,7 @@ function Projects() {
       const gridWidth = itemsPerRow * (cardWidth + gridSpacing) - gridSpacing;
       const gridHeight = totalRows * (cardHeight + gridSpacing) - gridSpacing;
       
-      const paddingFactor = 0.70;
+      const paddingFactor = 0.72;
       const scaleToFitWidth = (containerRect.width * paddingFactor) / gridWidth;
       const scaleToFitHeight = (containerRect.height * paddingFactor) / gridHeight;
       

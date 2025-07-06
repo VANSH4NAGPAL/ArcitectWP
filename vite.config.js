@@ -87,7 +87,7 @@ function handleLocalAPI(req, res) {
             const adminUsers = [
               {
                 username: 'only@admin',
-                passwordHash: '$2a$12$wH7QXuDQhaFawB26V35kSeq8rT7h8oCKqdkF7vV4xAD0BWnj/mvNG'
+                passwordHash: '$2a$12$Z24/i/5YN.z1Gb5/tBCPpulufV0bUqL4y2kgedPcTOOWcr6POevcm'
               }
             ];
             

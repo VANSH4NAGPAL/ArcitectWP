@@ -3,7 +3,7 @@ import Navigation from './Navigation';
 
 const LeftSidebar = forwardRef(function LeftSidebar(props, ref) {
   const {
-    logoSrc = "/logofullw.png",
+    logoSrc = "/logofull.png",
     logoAlt = "StudioDesignPalette Logo",
     children,
     className = "",
@@ -13,8 +13,11 @@ const LeftSidebar = forwardRef(function LeftSidebar(props, ref) {
   return (
     <div
       ref={ref}
-      className={`hidden lg:flex lg:w-[20%] lg:h-screen flex-col relative bg-gray-700 ${className}`}
+      className={`hidden lg:flex lg:w-[20%] lg:h-screen flex-col relative bg-white/10 backdrop-blur-[8px] border border-white/20 shadow-2xl z-10 ${className}`}
       style={{
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.13)',
+        border: '1.5px solid rgba(0,0,0,0.08)',
+        background: 'rgba(24,25,27,0.07)',
         willChange: "transform, opacity"
       }}
       {...rest}
@@ -31,7 +34,7 @@ const LeftSidebar = forwardRef(function LeftSidebar(props, ref) {
           }}
         />
         <div className="mt-8 hidden lg:block">
-          <Navigation textColor="white" />
+          <Navigation textColor="black" />
         </div>
         {children}
       </div>

@@ -210,24 +210,38 @@ function Home() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             <motion.h1
-              className="text-white text-4xl md:text-5xl lg:text-6xl font-light tracking-widest drop-shadow-2xl text-center"
-              style={{ fontFamily: '"Coolvetica Extra Light", sans-serif' }}
-              whileHover={{ scale: 1.02 }}
+              className="text-white text-3xl md:text-3xl lg:text-5xl font-semibold tracking-[0.4em] text-center flex gap-3 md:gap-7"
+              style={{
+                fontFamily: '"Coolvetica Extra Light", sans-serif',
+                letterSpacing: '0.25em',
+                textShadow: `
+                  0 8px 32px rgba(0,0,0,0.75),
+                  0 4px 16px rgba(0,0,0,0.55),
+                  0 2px 8px rgba(0,0,0,0.35),
+                  0 1.5px 0 #111,
+                  0 0.5px 0 #111
+                `
+              }}
+              whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
-              {"StudioDesignPalette".split("").map((letter, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: 0.6 + index * 0.05,
-                    ease: "easeOut"
-                  }}
-                >
-                  {letter}
-                </motion.span>
+              {"Studio Design Palette".split(" ").map((word, wIdx) => (
+                <span key={wIdx} className="inline-block">
+                  {word.split("").map((letter, lIdx) => (
+                    <motion.span
+                      key={lIdx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.6 + (wIdx * 0.3) + lIdx * 0.05,
+                        ease: "easeOut"
+                      }}
+                    >
+                      {letter}
+                    </motion.span>
+                  ))}
+                </span>
               ))}
             </motion.h1>
           </motion.div>

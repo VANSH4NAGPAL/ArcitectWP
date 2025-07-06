@@ -6,9 +6,9 @@ const PageLayout = () => {
   const sidebarRef = useRef(null);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-screen  flex flex-col lg:flex-row overflow-hidden">
       <LeftSidebar ref={sidebarRef} />
-      <div className="w-full lg:w-[100%] flex flex-col lg:h-screen overflow-x-hidden">
+      <div className="w-full lg:w-[100%]  flex flex-col lg:h-screen overflow-x-hidden">
         <div className="h-full">
           <Outlet />
         </div>
