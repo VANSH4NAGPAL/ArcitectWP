@@ -234,9 +234,9 @@ function Projects() {
 
   // Mouse and touch handlers
   const handleMouseDown = useCallback((e) => {
-    if (showMobileNav) return; // REMOVE: || e.target.closest('.project-card')
+    if (showMobileNav) return;
+    // Allow drag from anywhere on the container (not just whiteboard)
     e.preventDefault();
-    
     const currentTransform = transformRef.current;
     dragStateRef.current = {
       isDragging: true,
@@ -246,6 +246,24 @@ function Projects() {
       initialTransformY: currentTransform.y
     };
     setIsDragging(true);
+  }, [showMobileNav]);
+
+  const handleTouchStart = useCallback((e) => {
+    if (showMobileNav) return;
+    if (e.touches.length === 1) {
+      // Single finger drag from anywhere
+      const touch = e.touches[0];
+      const currentTransform = transformRef.current;
+      dragStateRef.current = {
+        isDragging: true,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        initialTransformX: currentTransform.x,
+        initialTransformY: currentTransform.y
+      };
+      setIsDragging(true);
+    }
+    // Pinch handled in effect below
   }, [showMobileNav]);
 
   // Global event listeners for dragging
@@ -273,9 +291,35 @@ function Projects() {
       }
     };
 
+    const handleGlobalTouchMove = (e) => {
+      if (showMobileNav || !dragStateRef.current.isDragging) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - dragStateRef.current.startX;
+      const deltaY = touch.clientY - dragStateRef.current.startY;
+      
+      const newTransform = {
+        scale: transformRef.current.scale,
+        x: dragStateRef.current.initialTransformX + deltaX,
+        y: dragStateRef.current.initialTransformY + deltaY,
+      };
+      
+      setTransform(constrainTransform(newTransform));
+    };
+
+    const handleGlobalTouchEnd = () => {
+      if (dragStateRef.current.isDragging) {
+        dragStateRef.current.isDragging = false;
+        setIsDragging(false);
+      }
+    };
+
     if (isDragging) {
       document.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
       document.addEventListener('mouseup', handleGlobalMouseUp, { passive: true });
+      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+      document.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
       
       document.body.style.userSelect = 'none';
       document.body.style.overflow = 'hidden';
@@ -285,6 +329,8 @@ function Projects() {
       if (isDragging) {
         document.removeEventListener('mousemove', handleGlobalMouseMove);
         document.removeEventListener('mouseup', handleGlobalMouseUp);
+        document.removeEventListener('touchmove', handleGlobalTouchMove);
+        document.removeEventListener('touchend', handleGlobalTouchEnd);
         
         document.body.style.userSelect = '';
         document.body.style.overflow = '';
@@ -328,6 +374,7 @@ function Projects() {
 
     let lastDistance = null;
     let pinchStartScale = null;
+    let pinchStartTransform = null;
 
     function getDistance(touches) {
       const dx = touches[0].clientX - touches[1].clientX;
@@ -339,6 +386,7 @@ function Projects() {
       if (e.touches.length === 2) {
         lastDistance = getDistance(e.touches);
         pinchStartScale = transformRef.current.scale;
+        pinchStartTransform = { ...transformRef.current };
       }
     }
 
@@ -353,7 +401,7 @@ function Projects() {
         const rect = container.getBoundingClientRect();
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
         const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-        const currentTransform = transformRef.current;
+        const currentTransform = pinchStartTransform;
         const newTransform = {
           ...currentTransform,
           scale: newScale,
@@ -368,6 +416,7 @@ function Projects() {
       if (e.touches.length < 2) {
         lastDistance = null;
         pinchStartScale = null;
+        pinchStartTransform = null;
       }
     }
 
@@ -519,12 +568,15 @@ function Projects() {
         ref={containerRef}
         className={`flex-1 relative overflow-hidden select-none transition-colors duration-900`}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
         style={{ 
           backgroundColor: whiteboardBgColor,
           backgroundSize: '40px 40px',
           backgroundPosition: '0 0, 20px 20px',
-        }}
+          touchAction: 'none',
+          }}
       >
+
         {/* Header - Fixed position */}
         <div className="absolute top-8 left-8 right-8 z-30 bg-transparent rounded-lg !p-4 w-auto">
           <div className="flex flex-col">
@@ -548,6 +600,7 @@ function Projects() {
                 );
               })}
             </div>
+            
             {/* Underline for visual separation */}
             <div ref={lineRef} className="w-full h-0.5 bg-gray-900 !mt-3" />
           </div>
@@ -575,6 +628,7 @@ function Projects() {
               }}
             />
           )}
+          
           {/* Projects Grid */}
           <div className="relative" style={{ width: `${WHITEBOARD_WIDTH}px`, height: `${WHITEBOARD_HEIGHT}px` }}>
             {projectsWithPositions.map((item) => {
@@ -633,6 +687,8 @@ function Projects() {
             })}
           </div>
         </div>
+        {/* End Whiteboard Content */}
+
         {/* Zoom Controls */}
         <div className="fixed bottom-8 right-8 z-30 flex flex-col gap-2">
           <button
