@@ -234,7 +234,7 @@ function Projects() {
 
   // Mouse and touch handlers
   const handleMouseDown = useCallback((e) => {
-    if (showMobileNav || e.target.closest('.project-card')) return;
+    if (showMobileNav) return; // REMOVE: || e.target.closest('.project-card')
     e.preventDefault();
     
     const currentTransform = transformRef.current;
@@ -249,7 +249,7 @@ function Projects() {
   }, [showMobileNav]);
 
   const handleTouchStart = useCallback((e) => {
-    if (showMobileNav || e.target.closest('.project-card')) return;
+    if (showMobileNav) return; // REMOVE: || e.target.closest('.project-card')
     
     const touch = e.touches[0];
     const currentTransform = transformRef.current;
