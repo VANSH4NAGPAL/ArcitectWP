@@ -20,6 +20,7 @@
     "security-audit": "npm run test-security && npm audit"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",
     "bcryptjs": "^2.4.3",
