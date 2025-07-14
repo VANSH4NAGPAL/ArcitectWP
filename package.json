@@ -17,7 +17,8 @@
     "test-multi-admin": "node test-multi-admin.js",
     "test-production": "node test-production.js",
     "deploy-prod": "npm run build && vercel --prod",
-    "security-audit": "npm run test-security && npm audit"
+    "security-audit": "npm run test-security && npm audit",
+    "postinstall": "npm rebuild"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
