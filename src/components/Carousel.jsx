@@ -1,28 +1,40 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import ProjectCard from './ProjectCard';
-import { projects } from '../data/projects';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 
-const Carousel = () => {
-  // Limit to first 4 projects
-  const carouselProjects = projects.slice(0, 4);
-
+const Carousel = ({ onSlideChange }) => {
+  const [carouselProjects, setCarouselProjects] = useState([]);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
-    dragFree: false,
-    skipSnaps: false,
     align: 'start',
-    speed: 8,
+    inViewThreshold: 1,
     startIndex: 0
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState([]);
 
+  // Fetch projects from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      setCarouselProjects(data.slice(0, 4)); // Limit to 4 projects
+    });
+    return () => unsub();
+  }, []);
+
   // Select handler
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+    const idx = emblaApi.selectedScrollSnap();
+    setSelectedIndex(idx);
+    if (onSlideChange && carouselProjects[idx]) {
+      onSlideChange(carouselProjects[idx]);
+    }
+  }, [emblaApi, onSlideChange, carouselProjects]);
 
   // Scroll to slide
   const scrollTo = useCallback(
@@ -34,19 +46,13 @@ const Carousel = () => {
     [emblaApi]
   );
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
   // Embla events
   useEffect(() => {
     if (!emblaApi) return;
     setScrollSnaps(emblaApi.scrollSnapList());
     emblaApi.on('select', onSelect);
+    // Call initially
+    onSelect();
     return () => {
       emblaApi.off('select', onSelect);
     };
@@ -54,23 +60,30 @@ const Carousel = () => {
 
   // Auto-scroll effect
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi || carouselProjects.length === 0) return;
     const autoScroll = setInterval(() => {
+      if (!emblaApi) return;
       emblaApi.scrollNext();
-    }, 4000);
+    }, 6000);
     return () => clearInterval(autoScroll);
-  }, [emblaApi]);
+  }, [emblaApi, carouselProjects.length]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden">
       {/* Carousel */}
-      <div className="embla" ref={emblaRef}>
-        <div className="embla__container">
+      <div className="embla w-full h-full" ref={emblaRef}>
+        <div className="embla__container flex w-full h-full">
           {carouselProjects.map((project, index) => (
-            <div className="embla__slide" key={project.id}>
-              <ProjectCard
-                project={project}
-                isActive={selectedIndex === index}
+            <div
+              className="embla__slide flex-shrink-0 w-full h-full flex items-center justify-center !m-0 !p-0"
+              key={project.docId || project.id || index}
+              style={{ minWidth: '100%', minHeight: '100%' }}
+            >
+              <img
+                src={project.cimg}
+                alt={project.title || `Project ${index + 1}`}
+                className="w-full h-full object-cover !rounded-none !shadow-none !m-0 !p-0"
+                draggable={false}
               />
             </div>
           ))}
@@ -78,13 +91,13 @@ const Carousel = () => {
       </div>
 
       {/* Progress Indicators */}
-      <div className="absolute top-1/2 left-4 -translate-y-1/2 z-50 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:top-auto md:translate-y-0">
-        <div className="flex flex-col gap-3 md:flex-row">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex flex-row gap-3">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollTo(index)}
-              className={`relative cursor-pointer focus:outline-none focus:ring-0 focus:border-none w-3 h-3 rounded-full ${selectedIndex === index ? 'bg-white' : 'bg-white/40'}`}
+              className={`w-3 h-3 rounded-full transition-colors duration-200 ${selectedIndex === index ? 'bg-white' : 'bg-white/40'}`}
               style={{ outline: 'none', border: 'none' }}
             />
           ))}
@@ -92,7 +105,7 @@ const Carousel = () => {
       </div>
 
       {/* Project Counter */}
-      <div className="absolute bottom-8 right-30 z-50 text-white/60">
+      <div className="absolute top-6 right-8 z-50 text-white/80">
         <div className="flex items-center space-x-2 text-sm font-light tracking-wider">
           <span className="text-white text-xl font-medium">
             {String(selectedIndex + 1).padStart(2, '0')}

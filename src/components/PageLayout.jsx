@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navigation from './Navigation';
@@ -12,15 +10,22 @@ const PageLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden relative">
-      {/* Desktop Navbar at top right */}
-      <div className="absolute top-6 right-8 z-50 hidden lg:block">
+      {/* Desktop Navbar and Logo at top */}
+      <div className="absolute top-6 left-8 right-8 z-50 hidden lg:flex items-center justify-between w-[94vw]">
+        {/* Logo on the very left */}
+        <img
+          src="/logofull.png" // Change to your logo path
+          alt="Logo"
+          className="h-40 w-auto !pl-5"
+        />
+        {/* Navbar on the very right */}
         <Navigation horizontal textColor="black" />
       </div>
 
-      {/* Mobile Nav Button */}
+      {/* Mobile: Logo and Navbar centered in overlay */}
       <>
         <motion.button
-          className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+          className="fixed top-4 right-4 z-50 lg:hidden w-12 h-12 rounded-full  shadow-lg flex items-center justify-center"
           onClick={() => setShowMobileNav(true)}
           aria-label="Open navigation"
           whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
@@ -46,6 +51,15 @@ const PageLayout = () => {
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.35, ease: "easeInOut" }}
             >
+              {/* Logo centered at top */}
+              <div className="flex flex-col items-center w-full">
+                <img
+                  src="/logo.png" // Change to your logo path
+                  alt="Logo"
+                  className="h-12 w-auto mb-8 mt-8"
+                />
+                <Navigation textColor="black" />
+              </div>
               <motion.button
                 className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
                 onClick={() => setShowMobileNav(false)}
@@ -59,14 +73,6 @@ const PageLayout = () => {
               >
                 <span className="text-2xl text-white">&times;</span>
               </motion.button>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              >
-                <Navigation textColor="black" />
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -94,20 +94,33 @@ function Projects() {
   }, [filteredProjects]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col md:!mt-53 ">
       {/* Category Filter Bar - Top Left */}
-      <div className="!p-6 !pt-8 !pb-2 flex flex-wrap gap-2 items-start justify-start !ml-7">
+      <div className="!p-6 !pt-6 !pb-2 flex flex-wrap gap-2 items-center justify-center !ml-7">
         {allCategories.map((category) => {
           const isActive = activeCategories.includes(category);
           return (
             <button
               key={category}
-              className={`relative flex items-center !px-4 !py-2 cursor-pointer  tracking-widest text-2xl font-semibold transition-colors lowercase
+              className={`group relative flex items-center !px-4 !py-2 cursor-pointer tracking-widest text-3xl font-semibold transition-colors lowercase
                 ${isActive ? 'text-black ' : 'text-gray-500 '}`}
               onClick={() => handleCategoryClick(category)}
               style={{ cursor: 'pointer' }}
             >
-              <span>{category}</span>
+              <span className="relative">
+                {category}
+                <span
+                  className={
+                    `absolute left-0 -bottom-1 w-full h-[3px] bg-black rounded origin-left
+                    opacity-0 scale-x-0
+                    group-hover:opacity-100 group-hover:scale-x-100
+                    transition-all duration-300`
+                  }
+                  style={{
+                    transformOrigin: 'left',
+                  }}
+                ></span>
+              </span>
             </button>
           );
         })}
@@ -115,7 +128,7 @@ function Projects() {
 
       {/* Projects Grid */}
       <div className="flex-1 w-full !px-6 !pb-8">
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 !p-10">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 !p-10">
           {visibleProjects.map((item, idx) => (
             <div
               key={item.docId}

@@ -1,12 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* Add Coolvetica Extra Light font-face */
+/* Add Omega Sans font-face */
 @font-face {
-  font-family: 'Coolvetica Extra Light';
-  src: url('/fonts/CoolveticaEl-Regular.woff2') format('woff2'),
-       url('/fonts/CoolveticaEl-Regular.woff') format('woff');
-  font-weight: 300;
+  font-family: 'Omega Sans';
+  src: url('/fonts/Omega+Sans+Regular.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -22,7 +21,7 @@ html {
 }
 
 html, body {
-  font-family: 'Coolvetica Extra Light', 'Nunito Sans', sans-serif;
+  font-family: 'Omega Sans';
 }
 
 body {

@@ -54,7 +54,7 @@ const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = f
   };
 
   const getHoverIndicatorClasses = () => {
-    return textColor === 'black' ? 'bg-black/50' : 'bg-white/50';
+    return textColor === 'black' ? 'bg-black' : 'bg-white';
   };
 
   return (
@@ -66,44 +66,47 @@ const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = f
     >
       <div className={
         horizontal
-          ? "flex flex-row gap-8 md:gap-12 lg:gap-16 xl:gap-20" // Use gap utilities for horizontal spacing
+          ? "flex flex-row gap-1 md:gap-2 lg:gap-3 xl:gap-4 " // Use gap utilities for horizontal spacing
           : "flex flex-col space-y-6"
       }>
         {navigationItems.map((item, index) => {
           const isActive = !noActiveState && activeItem === item.name;
 
-          const commonClasses = `group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative pl-6 focus:outline-none ${getTextClasses()} ${horizontal ? 'pl-0' : ''}`;
+          const commonClasses = ` group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative !pl-6 focus:outline-none ${getTextClasses()} ${horizontal ? 'pl-0' : ''}`;
 
           const linkContent = (
-            <>
+            <span className="relative inline-block">
               {/* Active line - only show if not noActiveState */}
               {isActive && (
                 <motion.div
-                  className={`absolute ${horizontal ? '-bottom-2 left-1/2 -translate-x-1/2 w-5 h-0.5' : '-left-2 top-1/2 -translate-y-1/2 h-5 w-0.5'} ${getIndicatorClasses()}`}
+                  className={`absolute left-0 right-0 -bottom-1 h-0.5 ${getIndicatorClasses()}`}
                   layoutId="activeIndicator"
-                  initial={{ scaleX: horizontal ? 0 : 1, scaleY: horizontal ? 1 : 0 }}
-                  animate={{ scaleX: 1, scaleY: 1 }}
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  style={{ transformOrigin: 'left' }}
                 />
               )}
 
               {/* Hover line */}
               {!isActive && (
                 <motion.div
-                  className={`absolute ${horizontal ? '-bottom-2 left-1/2 -translate-x-1/2 w-5 h-0.5' : '-left-2 top-1/2 -translate-y-1/2 h-5 w-0.5'} ${getHoverIndicatorClasses()} opacity-0 group-hover:opacity-100`}
-                  initial={{ scaleX: horizontal ? 0 : 1, scaleY: horizontal ? 1 : 0 }}
-                  animate={{ scaleX: 1, scaleY: 1 }}
-                  transition={{ duration: 0.2 }}
+                  className={`absolute left-0 right-0 -bottom-1 h-0.5 ${getHoverIndicatorClasses()} pointer-events-none`}
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  whileHover={{ scaleX: 1, opacity: 1 }}
+                  animate={{ scaleX: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: 'easeInOut' }}
+                  style={{ transformOrigin: 'left' }}
                 />
               )}
 
-              <span style={{ fontVariant: 'small-caps', fontSize: '1.18em', fontFamily: 'inherit' }}>
+              <span style={{ fontVariant: 'small-caps', fontSize: '1em', fontFamily: 'inherit' }}>
                 {item.name.charAt(0).toUpperCase()}
                 <span style={{ fontSize: '0.72em', fontVariant: 'normal' }}>
                   {item.name.slice(1).toLowerCase()}
                 </span>
               </span>
-            </>
+            </span>
           );
 
           return (

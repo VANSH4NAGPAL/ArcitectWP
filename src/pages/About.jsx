@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaBars } from 'react-icons/fa';
 import Navigation from '../components/Navigation';
+import Carousel from '../components/Carousel';
+
 
 const About = () => {
   const [showMobileNav, setShowMobileNav] = useState(false);
+  const [currentProject, setCurrentProject] = useState(null);
 
   return (
-    <div className="min-h-screen bg-[#faf9f7] flex flex-col !px-0 md:!px-0">
+    <div className="min-h-screen bg-white flex flex-col !px-0 md:!px-0 !mt-30">
       {/* Mobile Navigation Button - Top Right, animated with framer-motion (from Contact.jsx) */}
       <>
         <motion.button
@@ -66,197 +69,75 @@ const About = () => {
       {/* ABOUT SECTION */}
       <div>
         {/* MAIN CONTENT */}
-        <motion.main 
-          className="flex-1 flex flex-col !gap-12 !px-4 md:!px-12 !py-8 md:!py-12 !mt-8 md:!mt-12"
+        <motion.main
+          className="flex-1 flex flex-col !gap-12 !px-0 md:!px-0 !py-0 md:!py-0 !mt-0 md:!mt-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {/* HERO SECTION */}
-          <motion.section
-            className="flex flex-col md:flex-row w-full bg-[#faf9f7] border-b border-gray-200   !p-4 md:!p-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            whileHover={{ scale: 1.01, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
-          >
-            {/* Left: Heading and subtext */}
-            <div className="flex-1 flex flex-col justify-center !pr-0 md:!pr-8 !pb-8 md:!pb-0">
-              <motion.h2
-                className="font-light"
-                style={{
-                  fontFamily: 'Coolvetica Extra Light',
-                  fontWeight: 300,
-                  fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
-                  letterSpacing: '0.01em',
-                  lineHeight: 1.1,
-                  textTransform: 'uppercase',
-                  color: '#181818',
-                  marginBottom: '2.5rem',
-                  maxWidth: 500,
-                }}
-                whileHover={{ scale: 1.02, color: '#000' }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+          <section className="w-full flex flex-col md:flex-row min-h-[70vh] !mt-35 !p-0 ">
+            {/* Left: Company Name and Project Title */}
+            <div className="basis-[40%] md:basis-[40%]  flex flex-col justify-center items-start  !px-10 md:!px-20 !py-0 md:!py-0 !min-h-[340px]">
+              <h1
+                className="!mb-16  text-3xl md:text-7xl  tracking-widest text-black"
               >
-                Welcome to our world where inspiration drives design
-              </motion.h2>
-              <motion.p 
-                className="text-gray-600 text-base md:text-lg font-light max-w-md leading-relaxed"
-                whileHover={{ color: '#374151' }}
-                transition={{ duration: 0.3 }}
-              >
-                We create beautiful spaces that reflect your unique vision and personality. Our team blends creativity with technical expertise to deliver exceptional results for every project.
-              </motion.p>
-            </div>
-            
-            {/* Right: Person image */}
-            <div className="flex-1 min-h-[340px] relative flex items-center justify-center !px-0 md:!px-2">
-              {/* Person photo - full height */}
-              <div className="w-full max-w-md">
-                <motion.img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Full body portrait of team member"
-                  className="w-full h-[340px] md:h-[420px] object-cover object-center  shadow"
-                  style={{ maxHeight: 420 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-                    filter: "brightness(1.1)"
-                  }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-              </div>
-            </div>
-          </motion.section>
-
-          {/* ABOUT SECTION */}
-          <motion.section
-            className="w-full bg-[#faf9f7] border-b border-gray-200  !p-4 md:!p-8"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            whileHover={{ scale: 1.01, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-12 !gap-8 items-start">
-              {/* Left: Modern asymmetrical image grid */}
-              <div className="lg:col-span-7">
-                <div className="grid grid-cols-6 grid-rows-4 !gap-3 h-[400px] md:h-[500px]">
-                  {/* Large featured image - spans 4 columns, 3 rows */}
-                  <motion.div
-                    className="col-span-4 row-span-3 relative group overflow-hidden  shadow-lg"
-                    whileHover={{ scale: 1.02, rotate: 0.5 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  >
-                    <motion.img
-                      src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
-                      alt="Team collaboration"
-                      className="w-full h-full object-cover"
-                      whileHover={{ 
-                        scale: 1.1,
-                        filter: "brightness(1.1) saturate(1.2) contrast(1.1)"
-                      }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </motion.div>
-
-                  {/* Small image - top right */}
-                  <motion.div
-                    className="col-span-2 row-span-1 relative group overflow-hidden  shadow-md"
-                    whileHover={{ scale: 1.05, rotate: -1 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                  >
-                    <motion.img
-                      src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80"
-                      alt="Design process"
-                      className="w-full h-full object-cover"
-                      whileHover={{ 
-                        scale: 1.15,
-                        filter: "brightness(1.2) saturate(1.3)"
-                      }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </motion.div>
-
-                  {/* Medium image - middle right */}
-                  <motion.div
-                    className="col-span-2 row-span-2 relative group overflow-hidden  shadow-md"
-                    whileHover={{ scale: 1.03, rotate: 1 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  >
-                    <motion.img
-                      src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=600&q=80"
-                      alt="Team meeting"
-                      className="w-full h-full object-cover"
-                      whileHover={{ 
-                        scale: 1.1,
-                        filter: "brightness(1.1) saturate(1.1) contrast(1.05)"
-                      }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-tl from-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </motion.div>
-
-                  {/* Wide image - bottom */}
-                  <motion.div
-                    className="col-span-6 row-span-1 relative group overflow-hidden  shadow-md"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                  >
-                    <motion.img
-                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                      alt="Architecture design"
-                      className="w-full h-full object-cover"
-                      whileHover={{ 
-                        scale: 1.05,
-                        filter: "brightness(1.05) saturate(1.1)"
-                      }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-transparent to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </motion.div>
+                Studio Design Palette
+              </h1>
+              <div className="!mt-10">
+                <div className="  md:text-lg font-light tracking-widest text-black/70 min-h-[2.5rem] flex items-center">
+                  <AnimatePresence mode="wait">
+                    {currentProject?.title && (
+                      <motion.span
+                        key={currentProject.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.35, ease: "easeInOut" }}
+                        className="block w-full text-4xl"
+                      >
+                        {currentProject.title}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
-
-              {/* Right: About text */}
-              <motion.div 
-                className="lg:col-span-5 flex flex-col justify-center !pl-0 lg:!pl-8 !pt-8 lg:!pt-0"
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                <motion.h2
-                  className="!mb-6"
-                  style={{
-                    fontFamily: 'Coolvetica Extra Light',
-                    fontWeight: 300,
-                    fontSize: '2.2rem',
-                    color: '#181818',
-                    letterSpacing: '0.01em',
-                    textTransform: 'none',
-                  }}
-                  whileHover={{ scale: 1.02, color: '#000' }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  About Our Work
-                </motion.h2>
-                <motion.p 
-                  className="text-gray-700 text-lg font-light !mb-4 leading-relaxed"
-                  whileHover={{ color: '#374151' }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Our team works at the intersection of design, strategy, and making. We create spaces that inspire, using a collaborative approach to bring your vision to life.
-                </motion.p>
-                <motion.p 
-                  className="text-gray-600 text-lg font-light leading-relaxed"
-                  whileHover={{ color: '#374151' }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Every project is unique, and we pride ourselves on attention to detail and a passion for excellence. From concept to completion, we ensure a seamless process and outstanding results.
-                </motion.p>
-              </motion.div>
             </div>
-          </motion.section>
+            {/* Right: Carousel */}
+            <div className="basis-[60%] md:basis-[60%] flex items-center justify-center bg-white !p-0 !m-0 min-h-[340px] relative">
+              <div className="w-full h-[340px] md:h-auto !m-0 !p-0">
+                <Carousel onSlideChange={setCurrentProject} />
+              </div>
+            </div>
+          </section>
+
+          
+
+          {/* CEO SECTION */}
+          <section className="w-full flex flex-col md:flex-row !mt-32 !mb-0 !px-0 md:!px-0 items-center justify-center">
+            {/* Left: CEO Image */}
+            <div className="basis-[50%] md:basis-[50%] flex items-center justify-center !p-0 !m-0 min-h-[420px]">
+              <img
+                src="/background-image.png"
+                alt="CEO"
+                className="w-full h-[420px] object-cover object-center"
+                style={{ maxWidth: '100%', maxHeight: '420px' }}
+              />
+            </div>
+            {/* Right: CEO Text */}
+            <div className="basis-[50%] md:basis-[50%] flex flex-col justify-center items-center !px-10 md:!px-20 !py-0 md:!py-0 bg-white min-h-[420px]">
+              <div className="w-full flex flex-col items-center">
+                <h2
+                  className="text-4xl md:text-6xl font-normal tracking-tight text-black mb-8 text-center"
+                >
+                  ABOUT<br />US
+                </h2>
+                <p className="text-black/80 text-base md:text-lg font-light leading-relaxed !mb-0 !mt-0 text-center" style={{ maxWidth: 420 }}>
+                  This is the area you explain who you are and how you can solve their problem. Pull them in and show them exactly why they need you and how you'll be able to make their life/business better.
+                </p>
+              </div>
+            </div>
+          </section>
         </motion.main>
         
       </div>

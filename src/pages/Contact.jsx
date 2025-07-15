@@ -166,7 +166,7 @@ function Contact() {
         </AnimatePresence>
         {/* LOGO & NAVIGATION - Only on large screens */}
         
-      <div className="flex flex-col lg:flex-row justify-center lg:justify-start lg:w-[100%] overflow-y-auto ml-0 mt-0 lg:!ml-5 lg:!mt-5 items-center lg:items-start">
+      <div className="flex flex-col lg:flex-row justify-center lg:justify-start lg:w-[100%] overflow-y-auto !ml-0 !mt-0 lg:!ml-5 lg:!mt-35 items-center lg:items-start">
         <div className="!pt-12 lg:!pt-0 h-full px-2 sm:!px-4 lg:!px-8 py-4 sm:!py-6 lg:!py-8 w-[90%] lg:w-[100%] flex flex-col lg:flex-row">
           
           {/* Left Content */}

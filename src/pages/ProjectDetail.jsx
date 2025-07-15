@@ -14,6 +14,8 @@ function ProjectDetail() {
   const [showInfo, setShowInfo] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info' or 'story'
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mainImageIdx, setMainImageIdx] = useState(0);
+  const [images, setImages] = useState([]);
   const scrollRef = useRef(null);
 
   // Static white background
@@ -38,9 +40,15 @@ function ProjectDetail() {
     return false;
   });
 
-  const interiorImages = currentProject?.interiorImages || [];
-  const exteriorImages = currentProject?.exteriorImages || [];
-  const allImages = [...interiorImages, ...exteriorImages];
+  // Set images when currentProject changes
+  useEffect(() => {
+    if (currentProject) {
+      const interiorImages = currentProject.interiorImages || [];
+      const exteriorImages = currentProject.exteriorImages || [];
+      setImages([...interiorImages, ...exteriorImages]);
+      setMainImageIdx(0); // Reset to first image
+    }
+  }, [currentProject]);
 
   // Different image size configurations for gallery effect
   const getImageSize = (index) => {
@@ -79,7 +87,7 @@ function ProjectDetail() {
     return () => {
       scrollElement.removeEventListener('wheel', handleWheel);
     };
-  }, [allImages.length]);
+  }, [images.length]);
 
   // Placeholder: Replace with your actual sidebar open state/prop
   const isSidebarOpen = false; // TODO: Replace with real sidebar state
@@ -106,378 +114,124 @@ function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor }}>
-      {/* Mobile Navigation Button - Top Left, animated with framer-motion (from Contact.jsx, but left) */}
-      <>
-        <motion.button
-          className="fixed top-4 left-4 z-50 lg:hidden w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
-          onClick={() => setMobileNavOpen(true)}
-          aria-label="Open navigation"
-          whileHover={{ scale: 1.12, rotate: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
-          whileTap={{ scale: 0.95, rotate: -10 }}
-          initial={{ opacity: 0, y: -20, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
-          <motion.span
-            initial={{ rotate: 0 }}
-            animate={{ rotate: mobileNavOpen ? 90 : 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            <FaBars className="text-2xl text-black" />
-          </motion.span>
-        </motion.button>
-        <AnimatePresence>
-          {mobileNavOpen && (
-            <motion.div
-              className="fixed inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            >
-              <motion.button
-                className="absolute top-4 left-4 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-                onClick={() => setMobileNavOpen(false)}
-                aria-label="Close navigation"
-                whileHover={{ scale: 1.15, rotate: 90 }}
-                whileTap={{ scale: 0.92, rotate: -90 }}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center !mt-60    ">
+      {/* Top Image Section */}
+      <div className="flex flex-row w-[70vw]   mx-auto !gap-6">
+        {/* Main Image */}
+        <div className="flex-1  bg-gray-200 h-[60vh] overflow-hidden shadow-lg">
+          <AnimatePresence mode="wait">
+            {images[mainImageIdx] && (
+              <motion.img
+                key={images[mainImageIdx]}
+                src={images[mainImageIdx]}
+                alt="Main Project"
+                className="w-full h-full object-cover center"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.03 }}
+                transition={{ duration: 0.4, ease: 'easeInOut' }}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+        {/* Thumbnails */}
+        <div className="flex flex-col !gap-4  max-w-[320px] h-[60vh]">
+          {[1, 2, 3].map((offset, idx) => {
+            const imgIdx = offset < images.length ? offset : null;
+            if (imgIdx === null || !images[imgIdx]) return <div key={`empty-${idx}`} className=" bg-gray-100 " />;
+            // Swap logic: clicking swaps main and thumbnail in images state
+            const handleSwap = () => {
+              if (mainImageIdx === imgIdx) return;
+              const newImages = [...images];
+              // Always swap with index 0 (main image)
+              [newImages[0], newImages[imgIdx]] = [newImages[imgIdx], newImages[0]];
+              setImages(newImages);
+              setMainImageIdx(0);
+            };
+            return (
+              <button
+                key={images[imgIdx] ? images[imgIdx] + '-' + imgIdx : imgIdx}
+                className={`aspect-[4/3]  overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
+                  mainImageIdx === imgIdx ? "border-black" : "border-transparent"
+                }`}
+                onClick={handleSwap}
+                tabIndex={0}
               >
-                <span className="text-2xl text-white">&times;</span>
-              </motion.button>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              >
-                <Navigation textColor="black" />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </>
-
-      {/* Top Right Tab Buttons */}
-      <div className="fixed top-6 right-6 z-50">
-        <div className="bg-white/20 backdrop-blur-md rounded-2xl shadow-lg flex items-center overflow-hidden border border-white/30">
-          <button
-            className="!px-4 !py-2 text-gray-800 font-extrabold tracking-widest !mr-5 truncate max-w-[200px]"
-          >
-            {currentProject.title}
-          </button>
-          <button
-            onClick={() => {
-              if (showInfo && activeTab === 'info') {
-                setShowInfo(false);
-              } else {
-                setShowInfo(true);
-                setActiveTab('info');
-              }
-            }}
-            className={`!px-4 !py-2 font-semibold transition-colors cursor-pointer tracking-widest ${
-              activeTab === 'info' && showInfo 
-                ? ' text-gray-800 ' 
-                : 'text-gray-600 '
-            }`}
-          >
-            Info
-          </button>
-          <button
-            onClick={() => {
-              if (showInfo && activeTab === 'story') {
-                setShowInfo(false);
-              } else {
-                setShowInfo(true);
-                setActiveTab('story');
-              }
-            }}
-            className={`!px-4 !py-2 font-semibold transition-colors cursor-pointer tracking-widest ${
-              activeTab === 'story' && showInfo 
-                ? ' text-gray-800' 
-                : 'text-gray-600'
-            }`}
-          >
-            Story
-          </button>
+                <motion.img
+                  src={images[imgIdx]}
+                  alt={`Thumbnail ${imgIdx + 1}`}
+                  className="w-full h-full object-cover"
+                  whileHover={{ scale: 1.07 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                />
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Info Overlay - Slides in from right or left depending on sidebar */}
-      <div className={`fixed top-0 ${isSidebarOpen ? 'left-0 border-r' : 'right-0 border-l'} w-[100vw] sm:w-[40vw] h-full bg-white/40 backdrop-blur-lg border-white/50 shadow-2xl transition-all duration-300 ease-out z-40 ${
-        showInfo ? 'translate-x-0 opacity-100' : isSidebarOpen ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0'
-      }`}>
-        <div className="!p-6 h-full overflow-y-auto !mt-16">
-          {/* Content based on active tab */}
-          {activeTab === 'info' && (
-            <div>
-              {/* Project Description/Story */}
-              
-
-              {/* Project Details Table */}
-              <div className="border-0  overflow-hidden">
-                {/* Client */}
-                {currentProject.client && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Client
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.client}
-                    </div>
-                  </div>
-                )}
-
-                {/* Location */}
-                {currentProject.location && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Location
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-lg">
-                      <span className="text-black    font-semibold tracking-wider">{currentProject.location}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Size */}
-                {currentProject.size && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Size
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.size} m²
-                    </div>
-                  </div>
-                )}
-
-                {/* Project Dates */}
-                {(currentProject.projectDates?.design || 
-                  currentProject.projectDates?.fabrication || 
-                  currentProject.projectDates?.opening) && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Project dates
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.projectDates?.design && (
-                        <div>Design: {currentProject.projectDates.design}</div>
-                      )}
-                      {currentProject.projectDates?.fabrication && (
-                        <div>Fabrication & Installation: {currentProject.projectDates.fabrication}</div>
-                      )}
-                      {currentProject.projectDates?.opening && (
-                        <div>Opening: {currentProject.projectDates.opening}</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Services Provided */}
-                {currentProject.servicesProvided && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Services provided
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.servicesProvided}
-                    </div>
-                  </div>
-                )}
-
-                {/* Design Team */}
-                {currentProject.designTeam && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Design team
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.designTeam}
-                    </div>
-                  </div>
-                )}
-
-                {/* Press Links */}
-                {(currentProject.pressLinks && currentProject.pressLinks.length > 0) && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Press links
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-lg font-semibold tracking-wider">
-                      {currentProject.pressLinks.map((link, idx) => (
-                        <div key={idx} className="!mb-1">
-                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-blue-800 underline decoration-2 decoration-blue-800 cursor-pointer font-semibold tracking-wider">
-                            {link}
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Project Type */}
-                {currentProject.projectType && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Project type
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.projectType}
-                    </div>
-                  </div>
-                )}
-
-                {/* Use Type */}
-                {currentProject.useType && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Use type
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      <div className="flex flex-wrap gap-2">
-                        {currentProject.useType.split(',').map((type, idx) => (
-                          <span key={idx} className="bg-black/30 text-black !px-2 !py-1  text-xs font-semibold tracking-wider">
-                            {type.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Year */}
-                {currentProject.year && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Year
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.year}
-                    </div>
-                  </div>
-                )}
-
-                {/* Area */}
-                {currentProject.area && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Area
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.area}
-                    </div>
-                  </div>
-                )}
-
-                {/* Category */}
-                {currentProject.category && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Category
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.category === "Other" && currentProject.customCategory
-                        ? currentProject.customCategory
-                        : currentProject.category}
-                    </div>
-                  </div>
-                )}
-
-                {/* Type */}
-                {currentProject.type && (
-                  <div className="grid grid-cols-5 border-b border-black/100 last:border-b-0">
-                    <div className="col-span-2 !px-0 !py-2 font-semibold text-black text-lg tracking-wider">
-                      Type
-                    </div>
-                    <div className="col-span-3 !px-0 !py-2 text-black text-lg font-semibold tracking-wider">
-                      {currentProject.type}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'story' && (
-            <div>
-              {currentProject.description ? (
-                <div className="text-black leading-relaxed text-base font-semibold tracking-wider">
-                  {currentProject.description}
-                </div>
-              ) : (
-                <p className="text-black/70 italic font-semibold tracking-wider">No story available for this project.</p>
+      {/* Details Section */}
+      <div className="w-[71vw] mx-auto flex flex-col !mt-10 ">
+        {/* Left: Meta Info */}
+        <div className="w-full !py-4 !px-4 flex flex-row gap-10">
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Client</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.client}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Category</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.category || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Type</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.type || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Use Type</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.useType || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Area</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.area || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Size</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.size || "-"}</div>
+          </div>
+          
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Location</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.location || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Design Team</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.designTeam || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Services Provided</div>
+            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.servicesProvided || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Project Dates</div>
+            <div className="font-semibold text-black tracking-[0.1em]">
+              {currentProject.projectDates?.design && (
+                <div>Design: {currentProject.projectDates.design}</div>
               )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* All Images Horizontal Scroll */}
-      {allImages.length > 0 && (
-        <div className="w-full h-screen flex items-center !py-12">
-          <div 
-            ref={scrollRef}
-            className="overflow-x-auto overflow-y-hidden scroll-smooth w-full"
-            style={{ 
-              height: 'calc(100vh - 96px)', // Account for padding
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#888 transparent',
-              willChange: 'scroll-position',
-              transform: 'translateZ(0)'
-            }}
-          >
-             <div className="flex gap-6 items-center !px-8" style={{ 
-              width: 'max-content',
-              height: '100%',
-              backfaceVisibility: 'hidden',
-              perspective: '1000px'
-            }}>
-              {allImages.map((imageUrl, idx) => {
-                const { width, height } = getImageSize(idx);
-                const isLarge = width.includes('700') || height.includes('500');
-                
-                return (
-                  <div
-                    key={idx}
-                    className={`flex-shrink-0 ${width} ${height}  overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 ${
-                      isLarge ? 'ring-2 ring-white/20' : ''
-                    }`}
-                    style={{
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      transform: `translateY(${Math.sin(idx * 0.5) * 15}px)` // Reduced vertical offset
-                    }}
-                  >
-                    <img
-                      src={imageUrl}
-                      alt={`Project Image ${idx + 1}`}
-                      className="w-full h-full object-cover bg-center hover:scale-110 transition-transform duration-700 cursor-pointer"
-                      style={{
-                        willChange: 'transform',
-                        backfaceVisibility: 'hidden',
-                        filter: 'brightness(0.95) contrast(1.05)',
-                        transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                      loading="lazy"
-                      onMouseEnter={(e) => {
-                        e.target.style.filter = 'brightness(1.1) contrast(1.15) saturate(1.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.filter = 'brightness(0.95) contrast(1.05)';
-                      }}
-                    />
-                  </div>
-                );
-              })}
+              {currentProject.projectDates?.fabrication && (
+                <div>Fabrication: {currentProject.projectDates.fabrication}</div>
+              )}
+              {currentProject.projectDates?.opening && currentProject.projectDates.opening !== "" && (
+                <div>Opening: {currentProject.projectDates.opening}</div>
+              )}
             </div>
           </div>
         </div>
-      )}
+        {/* Right: Description */}
+        <div className="w-full !py-8 !px-8 flex flex-col justify-start">
+          <div className="uppercase text-xl text-gray-700 !mb-2 font-semibold">About</div>
+          <div className="text-gray-800 whitespace-pre-line">{currentProject.description || "No description available."}</div>
+        </div>
+      </div>
     </div>
   );
 }
