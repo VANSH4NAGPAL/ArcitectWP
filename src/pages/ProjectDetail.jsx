@@ -2,26 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { FaBars, FaTimes } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navigation from '../components/Navigation';
 import '../App.css';
 
 function ProjectDetail() {
   const { id } = useParams();
   const numericId = Number(id);
   const [allProjects, setAllProjects] = useState([]);
-  const [showInfo, setShowInfo] = useState(false);
-  const [activeTab, setActiveTab] = useState('info'); // 'info' or 'story'
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Removed unused: showInfo, setShowInfo, activeTab, setActiveTab, mobileNavOpen, setMobileNavOpen
   const [mainImageIdx, setMainImageIdx] = useState(0);
   const [images, setImages] = useState([]);
   const scrollRef = useRef(null);
 
-  // Static white background
-  const backgroundColor = '#ffffff';
-
-  // Fetch projects
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -33,64 +25,43 @@ function ProjectDetail() {
     return () => unsub();
   }, []);
 
-  // Find current project and get all images
   const currentProject = allProjects.find((p) => {
     if (p.docId === id) return true;
     if (!isNaN(numericId) && p.id === numericId) return true;
     return false;
   });
 
-  // Set images when currentProject changes
   useEffect(() => {
     if (currentProject) {
       const interiorImages = currentProject.interiorImages || [];
       const exteriorImages = currentProject.exteriorImages || [];
       setImages([...interiorImages, ...exteriorImages]);
-      setMainImageIdx(0); // Reset to first image
+      setMainImageIdx(0);
     }
   }, [currentProject]);
 
-  // Different image size configurations for gallery effect
-  const getImageSize = (index) => {
-    const patterns = [
-      { width: 'w-[700px]', height: 'h-[500px]' }, // Large
-      { width: 'w-[450px]', height: 'h-[350px]' }, // Medium
-      { width: 'w-[600px]', height: 'h-[400px]' }, // Medium-Large
-      { width: 'w-[400px]', height: 'h-[480px]' }, // Tall
-      { width: 'w-[650px]', height: 'h-[420px]' }, // Wide
-      { width: 'w-[380px]', height: 'h-[300px]' }, // Small
-    ];
-    return patterns[index % patterns.length];
-  };
+  // (Unused) getImageSize function removed for cleanliness
 
-  // Mouse wheel horizontal scroll
+  // Mouse wheel horizontal scroll for thumbnails
   useEffect(() => {
     const scrollElement = scrollRef.current;
     if (!scrollElement) return;
-
     const handleWheel = (e) => {
       if (e.deltaY !== 0) {
         e.preventDefault();
         e.stopPropagation();
-        
-        const scrollSpeed = 3; // Increased scroll speed for more responsiveness
+        const scrollSpeed = 3;
         const newScrollLeft = scrollElement.scrollLeft + e.deltaY * scrollSpeed;
-        
-        // Clamp to scroll bounds
         const maxScroll = scrollElement.scrollWidth - scrollElement.clientWidth;
         scrollElement.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScroll));
       }
     };
-
     scrollElement.addEventListener('wheel', handleWheel, { passive: false });
-    
     return () => {
       scrollElement.removeEventListener('wheel', handleWheel);
     };
   }, [images.length]);
 
-  // Placeholder: Replace with your actual sidebar open state/prop
-  const isSidebarOpen = false; // TODO: Replace with real sidebar state
 
   if (allProjects.length === 0) {
     return (
@@ -99,7 +70,6 @@ function ProjectDetail() {
       </div>
     );
   }
-
   if (!currentProject) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -114,18 +84,22 @@ function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center !mt-60    ">
-      {/* Top Image Section */}
-      <div className="flex flex-row w-[70vw]   mx-auto !gap-6">
-        {/* Main Image */}
-        <div className="flex-1  bg-gray-200 h-[60vh] overflow-hidden shadow-lg">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center !mt-8 md:!mt-56 !px-2 sm:!px-4">
+      <div className="w-full">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black !mb-14 text-center break-words">
+            {currentProject.title}
+          </h1>
+        </div>
+      <div className="flex flex-col md:flex-row w-full max-w-[96vw] md:max-w-[70vw] mx-auto gap-4 md:gap-6">
+        
+        <div className="flex-1 bg-gray-200 h-[32vh] sm:h-[40vh] md:h-[60vh] overflow-hidden shadow-lg min-w-0 ">
           <AnimatePresence mode="wait">
             {images[mainImageIdx] && (
               <motion.img
                 key={images[mainImageIdx]}
                 src={images[mainImageIdx]}
                 alt="Main Project"
-                className="w-full h-full object-cover center"
+                className="w-full h-full object-cover center min-h-[140px] sm:min-h-[200px]"
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.03 }}
@@ -134,16 +108,13 @@ function ProjectDetail() {
             )}
           </AnimatePresence>
         </div>
-        {/* Thumbnails */}
-        <div className="flex flex-col !gap-4  max-w-[320px] h-[60vh]">
+        <div className="flex flex-row md:flex-col gap-2 md:gap-4 w-full md:max-w-[320px] h-auto md:h-[60vh] !mt-2 md:!mt-0">
           {[1, 2, 3].map((offset, idx) => {
             const imgIdx = offset < images.length ? offset : null;
-            if (imgIdx === null || !images[imgIdx]) return <div key={`empty-${idx}`} className=" bg-gray-100 " />;
-            // Swap logic: clicking swaps main and thumbnail in images state
+            if (imgIdx === null || !images[imgIdx]) return <div key={`empty-${idx}`} className="bg-gray-100 w-[28vw] h-[12vw] min-w-[60px] min-h-[40px] md:w-auto md:h-auto " />;
             const handleSwap = () => {
               if (mainImageIdx === imgIdx) return;
               const newImages = [...images];
-              // Always swap with index 0 (main image)
               [newImages[0], newImages[imgIdx]] = [newImages[imgIdx], newImages[0]];
               setImages(newImages);
               setMainImageIdx(0);
@@ -151,9 +122,7 @@ function ProjectDetail() {
             return (
               <button
                 key={images[imgIdx] ? images[imgIdx] + '-' + imgIdx : imgIdx}
-                className={`aspect-[4/3]  overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
-                  mainImageIdx === imgIdx ? "border-black" : "border-transparent"
-                }`}
+                className={`aspect-[4/3] overflow-hidden border-2 transition-all duration-200 cursor-pointer ${mainImageIdx === imgIdx ? "border-black" : "border-transparent"} w-[28vw] h-[12vw] min-w-[60px] min-h-[40px] md:w-auto md:h-auto `}
                 onClick={handleSwap}
                 tabIndex={0}
               >
@@ -169,51 +138,48 @@ function ProjectDetail() {
           })}
         </div>
       </div>
-
-      {/* Details Section */}
-      <div className="w-[71vw] mx-auto flex flex-col !mt-10 ">
-        {/* Left: Meta Info */}
-        <div className="w-full !py-4 !px-4 flex flex-row gap-10">
+      <div className="w-full max-w-[98vw] md:max-w-[71vw] mx-auto flex flex-col !mt-6 md:!mt-10">
+        {/* Responsive two-column grid for project info (always two columns) */}
+        <div className="w-full !py-4 !px-2 sm:!px-4 grid grid-cols-2 gap-4 md:gap-10 text-center sm:text-left">
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Client</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.client}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Client</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.client}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Category</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.category || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Category</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.category || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Type</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.type || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Type</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.type || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Use Type</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.useType || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Use Type</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.useType || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Area</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.area || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Area</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.area || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Size</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.size || "-"}</div>
-          </div>
-          
-          <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Location</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.location || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Size</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.size || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Design Team</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.designTeam || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Location</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.location || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Services Provided</div>
-            <div className="font-semibold text-black tracking-[0.1em]">{currentProject.servicesProvided || "-"}</div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Design Team</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.designTeam || "-"}</div>
           </div>
           <div>
-            <div className="uppercase text-xl text-black !mb-1 tracking-[0.1em]">Project Dates</div>
-            <div className="font-semibold text-black tracking-[0.1em]">
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Services Provided</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.servicesProvided || "-"}</div>
+          </div>
+          <div>
+            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Project Dates</div>
+            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">
               {currentProject.projectDates?.design && (
                 <div>Design: {currentProject.projectDates.design}</div>
               )}
@@ -226,10 +192,10 @@ function ProjectDetail() {
             </div>
           </div>
         </div>
-        {/* Right: Description */}
-        <div className="w-full !py-8 !px-8 flex flex-col justify-start">
-          <div className="uppercase text-xl text-gray-700 !mb-2 font-semibold">About</div>
-          <div className="text-gray-800 whitespace-pre-line">{currentProject.description || "No description available."}</div>
+        {/* Description always centered and full width */}
+        <div className="w-full !py-6 !px-2 sm:!px-8 flex flex-col justify-center items-center text-center">
+          <div className="uppercase text-base sm:text-xl text-gray-700 !mb-2 font-semibold">About</div>
+          <div className="text-gray-800 whitespace-pre-line text-sm sm:text-base max-w-2xl">{currentProject.description || "No description available."}</div>
         </div>
       </div>
     </div>

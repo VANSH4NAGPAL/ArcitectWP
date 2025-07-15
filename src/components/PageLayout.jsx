@@ -9,7 +9,7 @@ const PageLayout = () => {
   const [showMobileNav, setShowMobileNav] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden relative">
+    <div className="min-h-screen flex flex-col lg:flex-row  relative">
       {/* Desktop Navbar and Logo at top */}
       <div className="absolute top-6 left-8 right-8 z-50 hidden lg:flex items-center justify-between w-[94vw]">
         {/* Logo on the very left */}
@@ -54,9 +54,9 @@ const PageLayout = () => {
               {/* Logo centered at top */}
               <div className="flex flex-col items-center w-full">
                 <img
-                  src="/logo.png" // Change to your logo path
+                  src="/logofull.png" // Change to your logo path
                   alt="Logo"
-                  className="h-12 w-auto mb-8 mt-8"
+                  className="h-12 w-auto !mb-8 !mt-8 z-10"
                 />
                 <Navigation textColor="black" />
               </div>
@@ -79,7 +79,7 @@ const PageLayout = () => {
       </>
 
       {/* Sidebar removed for full screen layout */}
-      <div className="w-full flex flex-col min-h-screen overflow-x-hidden">
+      <div className="w-full flex flex-col min-h-screen">
         <div className="h-full">
           <Outlet />
         </div>
