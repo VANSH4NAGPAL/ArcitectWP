@@ -94,7 +94,7 @@ function Projects() {
   }, [filteredProjects]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:!mt-53 ">
+    <div className="min-h-screen bg-white flex flex-col md:!mt-33 ">
       {/* Category Filter Bar - Top Left */}
       <div className="!p-6 !pt-6 !pb-2 flex flex-wrap gap-2 items-center justify-center !ml-7">
         {allCategories.map((category) => {

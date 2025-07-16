@@ -8,18 +8,33 @@ import { FaBars } from 'react-icons/fa';
 const PageLayout = () => {
   const [showMobileNav, setShowMobileNav] = useState(false);
 
+
+
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row  relative">
+    <div className="w-full min-h-screen flex flex-col lg:flex-row z-50 relative">
       {/* Desktop Navbar and Logo at top */}
-      <div className="absolute top-6 left-8 right-8 z-50 hidden lg:flex items-center justify-between w-[94vw]">
-        {/* Logo on the very left */}
-        <img
-          src="/logofull.png" // Change to your logo path
-          alt="Logo"
-          className="h-40 w-auto !pl-5"
-        />
-        {/* Navbar on the very right */}
-        <Navigation horizontal textColor="black" />
+      <div className="hidden lg:block w-full absolute inset-x-0 top-0 z-50">
+        <div
+          className="relative flex items-center justify-between w-full h-28 !pr-8 !px-8"
+          style={{
+            backgroundColor: '#ffffff',
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='a' gradientUnits='userSpaceOnUse' x1='88' y1='88' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23070b0b'/%3E%3Cstop offset='1' stop-color='%230c1010'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' gradientUnits='userSpaceOnUse' x1='75' y1='76' x2='168' y2='160'%3E%3Cstop offset='0' stop-color='%23868686'/%3E%3Cstop offset='0.09' stop-color='%23ababab'/%3E%3Cstop offset='0.18' stop-color='%23c4c4c4'/%3E%3Cstop offset='0.31' stop-color='%23d7d7d7'/%3E%3Cstop offset='0.44' stop-color='%23e5e5e5'/%3E%3Cstop offset='0.59' stop-color='%23f1f1f1'/%3E%3Cstop offset='0.75' stop-color='%23f9f9f9'/%3E%3Cstop offset='1' stop-color='%23FFFFFF'/%3E%3C/linearGradient%3E%3Cfilter id='c' x='0' y='0' width='200%25' height='200%25'%3E%3CfeGaussianBlur in='SourceGraphic' stdDeviation='12' /%3E%3C/filter%3E%3C/defs%3E%3Cpolygon fill='url(%23a)' points='0 174 0 0 174 0'/%3E%3Cpath fill='%23000' fill-opacity='.5' filter='url(%23c)' d='M121.8 174C59.2 153.1 0 174 0 174s63.5-73.8 87-94c24.4-20.9 87-80 87-80S107.9 104.4 121.8 174z'/%3E%3Cpath fill='url(%23b)' d='M142.7 142.7C59.2 142.7 0 174 0 174s42-66.3 74.9-99.3S174 0 174 0S142.7 62.6 142.7 142.7z'/%3E%3C/svg%3E\")",
+            backgroundAttachment: 'fixed',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'top left',
+          }}
+        >
+          {/* Logo on the very left */}
+          <div className="group relative">
+            <img
+              src="/logofullw.png" // Change to your logo path
+              alt="Logo"
+              className="h-20 w-auto !pl-5 relative z-20"
+            />
+          </div>
+          {/* Navbar on the very right */}
+          <Navigation horizontal textColor="black" linkClassName="nav-underline-animate" />
+        </div>
       </div>
 
       {/* Mobile: Logo and Navbar centered in overlay */}
@@ -80,7 +95,7 @@ const PageLayout = () => {
 
       {/* Sidebar removed for full screen layout */}
       <div className="w-full flex flex-col min-h-screen">
-        <div className="h-full">
+        <div className="h-full pt-32 lg:pt-32">
           <Outlet />
         </div>
       </div>

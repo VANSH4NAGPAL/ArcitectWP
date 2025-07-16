@@ -180,7 +180,7 @@ function Home() {
           </div>
 
           {/* 📌 Top Right Navigation (Desktop) */}
-          <div className="fixed top-16 right-4 md:top-20 md:right-8 z-[60]   navbar hidden lg:block">
+          <div className="fixed top-9 right-4  md:right-9 z-[60]   navbar hidden lg:block">
             <Navigation horizontal={true} textColor="white" />
           </div>
 
