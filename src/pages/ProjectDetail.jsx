@@ -1,203 +1,218 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { motion, AnimatePresence } from 'framer-motion';
-import '../App.css';
+
 
 function ProjectDetail() {
   const { id } = useParams();
-  const numericId = Number(id);
-  const [allProjects, setAllProjects] = useState([]);
-  // Removed unused: showInfo, setShowInfo, activeTab, setActiveTab, mobileNavOpen, setMobileNavOpen
-  const [mainImageIdx, setMainImageIdx] = useState(0);
-  const [images, setImages] = useState([]);
-  const scrollRef = useRef(null);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [galleryImages, setGalleryImages] = useState([]);
 
   useEffect(() => {
+    // Listen for project data
     const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      setAllProjects(data);
+      const data = snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
+      // Find project by id param
+      const project = data.find((p) => p.docId === id || p.id === Number(id));
+      if (project) {
+        const images = [];
+        if (Array.isArray(project.interiorImages)) images.push(...project.interiorImages);
+        if (Array.isArray(project.exteriorImages)) images.push(...project.exteriorImages);
+        setGalleryImages(images);
+        setCurrentIdx(0);
+      }
     });
     return () => unsub();
-  }, []);
+  }, [id]);
 
-  const currentProject = allProjects.find((p) => {
-    if (p.docId === id) return true;
-    if (!isNaN(numericId) && p.id === numericId) return true;
-    return false;
-  });
-
+  // Preload images
   useEffect(() => {
-    if (currentProject) {
-      const interiorImages = currentProject.interiorImages || [];
-      const exteriorImages = currentProject.exteriorImages || [];
-      setImages([...interiorImages, ...exteriorImages]);
-      setMainImageIdx(0);
-    }
-  }, [currentProject]);
+    galleryImages.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [galleryImages]);
 
-  // (Unused) getImageSize function removed for cleanliness
+  const handlePrev = () => {
+    setCurrentIdx((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  };
+  const handleNext = () => {
+    setCurrentIdx((prev) => (prev + 1) % galleryImages.length);
+  };
 
-  // Mouse wheel horizontal scroll for thumbnails
+  // Get project details from Firestore snapshot
+  const [projectDetails, setProjectDetails] = useState(null);
   useEffect(() => {
-    const scrollElement = scrollRef.current;
-    if (!scrollElement) return;
-    const handleWheel = (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        e.stopPropagation();
-        const scrollSpeed = 3;
-        const newScrollLeft = scrollElement.scrollLeft + e.deltaY * scrollSpeed;
-        const maxScroll = scrollElement.scrollWidth - scrollElement.clientWidth;
-        scrollElement.scrollLeft = Math.max(0, Math.min(newScrollLeft, maxScroll));
+    const unsub = onSnapshot(collection(db, 'projects'), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() }));
+      const project = data.find((p) => p.docId === id || p.id === Number(id));
+      if (project) {
+        setProjectDetails(project);
       }
-    };
-    scrollElement.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      scrollElement.removeEventListener('wheel', handleWheel);
-    };
-  }, [images.length]);
+    });
+    return () => unsub();
+  }, [id]);
 
+  if (galleryImages.length === 0) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No images found.</div>;
+  }
 
-  if (allProjects.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl font-semibold">Loading project...</div>
-      </div>
-    );
-  }
-  if (!currentProject) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold !mb-4">Project Not Found</h1>
-          <p className="text-gray-600 !mb-4">
-            Project with ID "{id}" does not exist.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Calculate next image index
+  const nextIdx = (currentIdx + 1) % galleryImages.length;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center !mt-8 md:!mt-56 !px-2 sm:!px-4">
-      <div className="w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black !mb-14 text-center break-words">
-            {currentProject.title}
-          </h1>
-        </div>
-      <div className="flex flex-col md:flex-row w-full max-w-[96vw] md:max-w-[70vw] mx-auto gap-4 md:gap-6">
-        
-        <div className="flex-1 bg-gray-200 h-[32vh] sm:h-[40vh] md:h-[60vh] overflow-hidden shadow-lg min-w-0 ">
-          <AnimatePresence mode="wait">
-            {images[mainImageIdx] && (
-              <motion.img
-                key={images[mainImageIdx]}
-                src={images[mainImageIdx]}
-                alt="Main Project"
-                className="w-full h-full object-cover center min-h-[140px] sm:min-h-[200px]"
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.03 }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '112px' }}>
+      <div style={{ position: 'relative', width: '100vw', height: '78vh', maxHeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <motion.div
+          className="gallery-slider"
+          style={{ display: 'flex', width: `calc(${galleryImages.length + 1} * 95%)`, height: '100%' }}
+          animate={{ x: `-${currentIdx * 100}%` }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        >
+          {/* ...existing code for images... */}
+          {galleryImages.map((src, idx) => (
+            <div
+              key={idx}
+              style={{
+                flex: '0 0 95%',
+                height: '100%',
+                position: 'relative',
+                marginRight: 8,
+                opacity: idx === currentIdx ? 1 : 1,
+                zIndex: idx === currentIdx ? 2 : 1,
+                transition: 'opacity 0.3s',
+              }}
+            >
+              <img
+                src={src}
+                alt={`Gallery ${idx + 1}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0, boxShadow: idx === currentIdx ? '0 4px 24px rgba(0,0,0,0.10)' : '0 2px 8px rgba(0,0,0,0.08)' }}
               />
-            )}
-          </AnimatePresence>
-        </div>
-        <div className="flex flex-row md:flex-col gap-2 md:gap-4 w-full md:max-w-[320px] h-auto md:h-[60vh] !mt-2 md:!mt-0">
-          {[1, 2, 3].map((offset, idx) => {
-            const imgIdx = offset < images.length ? offset : null;
-            if (imgIdx === null || !images[imgIdx]) return <div key={`empty-${idx}`} className="bg-gray-100 w-[28vw] h-[12vw] min-w-[60px] min-h-[40px] md:w-auto md:h-auto " />;
-            const handleSwap = () => {
-              if (mainImageIdx === imgIdx) return;
-              const newImages = [...images];
-              [newImages[0], newImages[imgIdx]] = [newImages[imgIdx], newImages[0]];
-              setImages(newImages);
-              setMainImageIdx(0);
-            };
-            return (
-              <button
-                key={images[imgIdx] ? images[imgIdx] + '-' + imgIdx : imgIdx}
-                className={`aspect-[4/3] overflow-hidden border-2 transition-all duration-200 cursor-pointer ${mainImageIdx === imgIdx ? "border-black" : "border-transparent"} w-[28vw] h-[12vw] min-w-[60px] min-h-[40px] md:w-auto md:h-auto `}
-                onClick={handleSwap}
-                tabIndex={0}
-              >
-                <motion.img
-                  src={images[imgIdx]}
-                  alt={`Thumbnail ${imgIdx + 1}`}
-                  className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.07 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div className="w-full max-w-[98vw] md:max-w-[71vw] mx-auto flex flex-col !mt-6 md:!mt-10">
-        {/* Responsive two-column grid for project info (always two columns) */}
-        <div className="w-full !py-4 !px-2 sm:!px-4 grid grid-cols-2 gap-4 md:gap-10 text-center sm:text-left">
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Client</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.client}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Category</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.category || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Type</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.type || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Use Type</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.useType || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Area</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.area || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Size</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.size || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Location</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.location || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Design Team</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.designTeam || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Services Provided</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">{currentProject.servicesProvided || "-"}</div>
-          </div>
-          <div>
-            <div className="uppercase text-base sm:text-xl text-black !mb-1 tracking-[0.1em]">Project Dates</div>
-            <div className="font-semibold text-black tracking-[0.1em] text-sm sm:text-base">
-              {currentProject.projectDates?.design && (
-                <div>Design: {currentProject.projectDates.design}</div>
-              )}
-              {currentProject.projectDates?.fabrication && (
-                <div>Fabrication: {currentProject.projectDates.fabrication}</div>
-              )}
-              {currentProject.projectDates?.opening && currentProject.projectDates.opening !== "" && (
-                <div>Opening: {currentProject.projectDates.opening}</div>
-              )}
             </div>
-          </div>
-        </div>
-        {/* Description always centered and full width */}
-        <div className="w-full !py-6 !px-2 sm:!px-8 flex flex-col justify-center items-center text-center">
-          <div className="uppercase text-base sm:text-xl text-gray-700 !mb-2 font-semibold">About</div>
-          <div className="text-gray-800 whitespace-pre-line text-sm sm:text-base max-w-2xl">{currentProject.description || "No description available."}</div>
-        </div>
+          ))}
+          {/* Add a duplicate of the first image for wrap preview */}
+          {galleryImages.length > 0 && (
+            <div
+              key="wrap-preview"
+              style={{
+                flex: '0 0 95%',
+                height: '100%',
+                position: 'relative',
+                marginRight: 0,
+                opacity: 1,
+                zIndex: 1,
+                transition: 'opacity 0.3s',
+              }}
+            >
+              <img
+                src={galleryImages[0]}
+                alt="Gallery 1 preview"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+              />
+            </div>
+          )}
+        </motion.div>
       </div>
+      {/* ...existing code for navigation buttons and index... */}
+      <div style={{ position: 'relative', width: '100vw', height: 0 }}>
+        <button
+          onClick={handlePrev}
+          style={{
+            position: 'absolute',
+            right: 96,
+            bottom: -50,
+            background: 'transparent',
+            color: 'white',
+            border: 'none',
+            fontSize: 32,
+            cursor: 'pointer',
+            zIndex: 3,
+            borderRadius: 8,
+            padding: '8px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Previous"
+        >
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 8L12 16L20 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <button
+          onClick={handleNext}
+          style={{
+            position: 'absolute',
+            right: 34,
+            bottom: -50,
+            background: 'transparent',
+            color: 'white',
+            border: 'none',
+            fontSize: 32,
+            cursor: 'pointer',
+            zIndex: 3,
+            borderRadius: 8,
+            padding: '8px 54px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Next"
+        >
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8L20 16L12 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      {/* Project details section below image */}
+{projectDetails && (
+  <div className="w-screen mx-auto  !px-6 flex flex-row gap-8 bg-black">
+    {/* Left: Project Data (50%) */}
+    <div className="flex-1 min-w-[60px] max-w-[30%] text-left !p-20">
+      <h2 className="text-3xl font-extrabold !mb-2 text-white tracking-widest">{projectDetails.title || 'Untitled Project'}</h2>
+      <div className="text-lg text-white font-extrabold !mb-4 tracking-widest">{projectDetails.category || projectDetails.customCategory || projectDetails.projectType || ''}</div>
+      <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <div className="text-[1.3rem] font-extrabold text-white">Location</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.location || '-'}</div>
+        {/* <div className="text-[1.3rem] font-extrabold text-white">Client</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.client || '-'}</div>
+        <div className="text-[1.3rem] font-extrabold text-white">Area</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.area || projectDetails.size || '-'}</div> */}
+        <div className="text-[1.3rem] font-extrabold text-white">Year</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.year || '-'}</div>
+        <div className="text-[1.3rem] font-extrabold text-white">Type</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.type || projectDetails.useType || '-'}</div>
+        {/* <div className="text-[1.3rem] font-extrabold text-white">Design Team</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.designTeam || '-'}</div>
+        <div className="text-[1.3rem] font-extrabold text-white">Services Provided</div>
+        <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.servicesProvided || '-'}</div> */}
+        
+      </div>
+      {/* Project Dates */}
+      {projectDetails.projectDates && (
+        <div className="!mt-4 grid grid-cols-2 gap-x-8 gap-y-2">
+          <div className="text-[1.3rem] font-extrabold text-white">Design</div>
+          <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.projectDates.design || '-'}</div>
+          <div className="text-[1.3rem] font-extrabold text-white">Fabrication</div>
+          <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.projectDates.fabrication || '-'}</div>
+          <div className="text-[1.3rem] font-extrabold text-white">Opening</div>
+          <div className="text-[1.2rem] font-semibold text-gray-500">{projectDetails.projectDates.opening || '-'}</div>
+        </div>
+      )}
+    </div>
+    {/* Right: Description (50%) */}
+    <div className="flex-1 max-w-[50%] text-left flex flex-col justify-start !p-20">
+      <div className="text-[1.3rem] text-white font-extrabold !mb-2">Description</div>
+      <div className="text-[1.3rem] text-white font-semibold tracking-widest">{projectDetails.description || '-'}</div>
+    </div>
+  </div>
+)}
+      
+      
     </div>
   );
 }

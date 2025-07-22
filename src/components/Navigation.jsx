@@ -1,19 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import { navigationItems } from '../data/projects';
+import gsap from 'gsap';
 
-const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = false }) => {
+const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = false, small = false, forceBlackNoActive = false }) => {
   const [activeItem, setActiveItem] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const itemRefs = useRef({});
+  const bgRef = useRef(null);
 
-  // Update active item based on current route - only if noActiveState is false
+  // Close mobile menu on resize to desktop
   useEffect(() => {
-    if (noActiveState) {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) { // md breakpoint from Tailwind
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Assign refs to all items
+  const setItemRef = (el, name) => {
+    if (el) itemRefs.current[name] = el;
+  };
+
+  // Update active item based on current route - only if noActiveState is false and not forceBlackNoActive
+  useEffect(() => {
+    if (noActiveState || forceBlackNoActive) {
       setActiveItem(''); // No active state
       return; 
     }
-
     const currentPath = location.pathname;
     if (currentPath === '/') {
       setActiveItem('home');
@@ -26,130 +45,273 @@ const Navigation = ({ textColor = 'white', noActiveState = false, horizontal = f
     } else {
       setActiveItem(''); // For project detail pages or other routes
     }
-  }, [location.pathname, noActiveState]);
+  }, [location.pathname, noActiveState, forceBlackNoActive]);
 
-  const handleNavClick = (item) => {
-    if (!noActiveState) {
-      setActiveItem(item.name);
-    }
+  // Animate background to active item
+  useEffect(() => {
+    const bg = bgRef.current;
 
-    if (item.href.startsWith('#')) {
-      const element = document.querySelector(item.href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+    const updateBgPosition = () => {
+      if (!activeItem || noActiveState || forceBlackNoActive) {
+        if (bg) {
+          gsap.to(bg, { opacity: 0, duration: 0.3, pointerEvents: 'none' });
+        }
+        return;
       }
-    }
-  };
+      const node = itemRefs.current[activeItem];
+      if (node && bg) {
+        const parentNode = node.parentNode?.parentNode;
+        if (!parentNode) return;
+
+        const rect = node.getBoundingClientRect();
+        const parentRect = parentNode.getBoundingClientRect();
+
+        gsap.to(bg, {
+          top: rect.top - parentRect.top,
+          left: rect.left - parentRect.left,
+          width: rect.width,
+          height: rect.height,
+          borderRadius: 9999,
+          opacity: 1,
+          duration: 0.4,
+          ease: 'power2.out',
+          pointerEvents: 'none',
+        });
+      }
+    };
+
+    updateBgPosition();
+
+    window.addEventListener('resize', updateBgPosition);
+
+    return () => {
+      window.removeEventListener('resize', updateBgPosition);
+    };
+  }, [activeItem, noActiveState, forceBlackNoActive, horizontal, small]);
 
   // Dynamic color classes based on textColor prop - all text same color
   const getTextClasses = () => {
-    if (textColor === 'black') {
+    if (forceBlackNoActive || textColor === 'black') {
       return 'text-black hover:text-black/80';
     }
     return 'text-white hover:text-white/80';
   };
 
-  const getIndicatorClasses = () => {
-    return textColor === 'black' ? 'bg-black' : 'bg-white';
-  };
-
-  const getHoverIndicatorClasses = () => {
-    return textColor === 'black' ? 'bg-black' : 'bg-white';
-  };
-
   return (
-    <motion.nav 
-      className={`z-50 ${horizontal ? 'w-auto' : ''}`}
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
-    >
-      <div className={
-        horizontal
-          ? "flex flex-row gap-1 md:gap-2 lg:gap-3 xl:gap-4 " // Use gap utilities for horizontal spacing
-          : "flex flex-col space-y-6"
-      }>
-        {navigationItems.map((item, index) => {
-          const isActive = !noActiveState && activeItem === item.name;
-
-          const commonClasses = ` group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative !pl-6 focus:outline-none ${getTextClasses()} ${horizontal ? 'pl-0' : ''}`;
-
+    <nav className={`z-50 bg-transparent relative justify-center items-center`} style={{ position: 'relative' }}>
+      {/* Hamburger for mobile */}
+      <div className="md:hidden flex items-center justify-end w-full">
+        <button
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          className="!p-3 rounded-full bg-white/20 backdrop-blur-lg shadow-lg relative"
+          style={{ zIndex: 10000, overflow: 'hidden', width: 48, height: 48, pointerEvents: 'auto' }}
+          onClick={() => setMobileOpen((prev) => !prev)}
+        >
+          <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <FaBars
+              size={28}
+              color={textColor === 'black' ? 'black' : 'white'}
+              style={{
+                transition: 'transform 0.4s cubic-bezier(.68,-0.55,.27,1.55), opacity 0.3s',
+                transform: mobileOpen ? 'rotate(90deg) scale(0.7)' : 'rotate(0deg) scale(1)',
+                opacity: mobileOpen ? 0 : 1,
+                position: 'absolute',
+                pointerEvents: 'none',
+              }}
+            />
+            <FaTimes
+              size={32}
+              color={textColor === 'black' ? 'black' : 'white'}
+              style={{
+                transition: 'transform 0.4s cubic-bezier(.68,-0.55,.27,1.55), opacity 0.3s',
+                transform: mobileOpen ? 'rotate(0deg) scale(1)' : 'rotate(-90deg) scale(0.7)',
+                opacity: mobileOpen ? 1 : 0,
+                position: 'absolute',
+                pointerEvents: 'none',
+              }}
+            />
+          </span>
+        </button>
+      </div>
+      {/* Desktop navigation - only visible on md and up */}
+      <div
+        className={
+          `hidden md:flex ` + (
+            horizontal
+              ? `flex-row gap-1 md:gap-2 lg:gap-3 xl:gap-4 ${small ? 'gap-2' : ''}`
+              : `flex-col space-y-6 ${small ? 'space-y-3' : ''}`
+          )
+        }
+        style={{ position: 'relative', justifyContent: 'center', alignItems: 'center' }}
+      >
+        {/* Animated background */}
+        <div
+          ref={bgRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 0,
+            background: 'black',
+            borderRadius: '9999px',
+            pointerEvents: 'none',
+            opacity: 0,
+            width: 0,
+            height: 0,
+            transition: 'opacity 0.3s',
+          }}
+        />
+        {navigationItems.map((item) => {
+          // ...existing code...
+          const isActive = !noActiveState && !forceBlackNoActive && activeItem === item.name;
+          const fontSize = small ? '16px' : '22px';
+          const paddingLeft = horizontal ? '' : small ? '!pl-3' : '!pl-6';
+          const commonClasses = ` group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative ${paddingLeft} focus:outline-none ${getTextClasses()} ${horizontal ? 'pl-0' : ''}`;
           const linkContent = (
-            <span className="relative inline-block">
-              {/* Active line - only show if not noActiveState */}
-              {isActive && (
-                <motion.div
-                  className={`absolute left-0 right-0 -bottom-1 h-0.5 ${getIndicatorClasses()}`}
-                  layoutId="activeIndicator"
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  style={{ transformOrigin: 'left' }}
-                />
-              )}
-
-              {/* Hover line */}
-              {!isActive && (
-                <motion.div
-                  className={`absolute left-0 right-0 -bottom-1 h-0.5 ${getHoverIndicatorClasses()} pointer-events-none`}
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  whileHover={{ scaleX: 1, opacity: 1 }}
-                  animate={{ scaleX: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeInOut' }}
-                  style={{ transformOrigin: 'left' }}
-                />
-              )}
-
-              <span style={{ fontVariant: 'small-caps', fontSize: '1em', fontFamily: 'inherit' }}>
-                {item.name.charAt(0).toUpperCase()}
-                <span style={{ fontSize: '0.72em', fontVariant: 'normal' }}>
-                  {item.name.slice(1).toLowerCase()}
-                </span>
+            <span
+              className="relative inline-block"
+              style={{
+                fontVariant: 'small-caps',
+                fontSize: fontSize,
+                position: 'relative',
+                zIndex: 1,
+                color: isActive ? 'white' : (forceBlackNoActive ? (textColor === 'white' ? 'white' : 'black') : undefined),
+                lineHeight: '2.2em',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '9999px',
+                background: 'transparent',
+                display: 'inline-block',
+              }}
+            >
+              {item.name.charAt(0).toUpperCase()}
+              <span style={{ fontSize: small ? '0.62em' : '0.72em', fontVariant: 'normal' }}>
+                {item.name.slice(1).toLowerCase()}
               </span>
             </span>
           );
-
           return (
-            <motion.div
-              key={item.name}
-              className="relative"
-              initial={{ opacity: 0, x: horizontal ? 0 : -20, y: horizontal ? -20 : 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-            >
+            <div key={item.name} className="relative" style={{ zIndex: 1 }}>
               {item.href.startsWith('#') ? (
-                <motion.a
+                <a
+                  ref={el => setItemRef(el, item.name)}
                   href={item.href}
-                  onClick={(e) => {
+                  onClick={e => {
                     e.preventDefault();
-                    handleNavClick(item);
+                    if (!forceBlackNoActive) setActiveItem(item.name);
+                    const element = document.querySelector(item.href);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
                   }}
                   className={commonClasses}
-                  style={{ fontSize: '22px', fontFamily: '"Nunito Sans", sans-serif' }}
-                  whileTap={{ scale: 0.95 }}
+                  style={{ fontSize }}
                 >
                   {linkContent}
-                </motion.a>
+                </a>
               ) : (
-                <motion.div
+                <div
+                  ref={el => setItemRef(el, item.name)}
                   className={commonClasses}
-                  style={{ fontSize: '22px', fontFamily: '"Nunito Sans", sans-serif' }}
-                  whileTap={{ scale: 0.95 }}
+                  style={{ fontSize }}
                 >
                   <Link
                     to={item.href}
-                    onClick={() => !noActiveState && setActiveItem(item.name)}
+                    onClick={() => !noActiveState && !forceBlackNoActive && setActiveItem(item.name)}
                     className="block w-full h-full"
                   >
                     {linkContent}
                   </Link>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           );
         })}
       </div>
-    </motion.nav>
+      {/* Mobile menu overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center w-screen h-screen"
+          style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(10px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(10px) saturate(180%)',
+            borderRadius: '0',
+            border: '1px solid rgba(255, 255, 255, 0.7)',
+            minHeight: '100vh',
+            minWidth: '100vw',
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          {/* ...removed extra cross button... */}
+          <div className="flex flex-col items-center justify-center w-full h-full gap-10">
+            {navigationItems.map((item) => {
+              const isActive = !noActiveState && !forceBlackNoActive && activeItem === item.name;
+              const fontSize = '26px';
+              const linkContent = (
+                <span
+                  className="relative inline-block"
+                  style={{
+                    fontVariant: 'small-caps',
+                    fontSize: fontSize,
+                    position: 'relative',
+                    zIndex: 1,
+                    color: 'black', // Always black for mobile menu
+                    lineHeight: '1.5em',
+                    padding: '0.5rem 0', // Vertical padding for spacing
+                    background: 'transparent',
+                    display: 'inline-block',
+                  }}
+                >
+                  {item.name.charAt(0).toUpperCase()}
+                  <span style={{ fontSize: '0.72em', fontVariant: 'normal' }}>
+                    {item.name.slice(1).toLowerCase()}
+                  </span>
+                </span>
+              );
+
+              const mobileLinkClassName = `group block font-light tracking-widest uppercase transition-all duration-300 cursor-pointer relative focus:outline-none text-black hover:text-black/80 text-center ${isActive ? 'border-b-2 border-black' : 'border-b-2 border-transparent'}`;
+
+              return item.href.startsWith('#') ? (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  onClick={e => {
+                    e.preventDefault();
+                    setMobileOpen(false);
+                    if (!forceBlackNoActive) setActiveItem(item.name);
+                    const element = document.querySelector(item.href);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className={mobileLinkClassName}
+                  style={{ fontSize }}
+                >
+                  {linkContent}
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    !noActiveState && !forceBlackNoActive && setActiveItem(item.name);
+                  }}
+                  className={mobileLinkClassName}
+                  style={{ fontSize }}
+                >
+                  {linkContent}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 

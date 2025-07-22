@@ -97,7 +97,7 @@ const About = () => {
           <section className="w-full flex flex-col md:flex-row min-h-[74vh] md:!mt-8 z-0  !p-0 bg-[#0e1111] ">
             {/* Left: Company Name and Project Title */}
             <div className="gsap-left basis-[40%] md:basis-[40%] h-auto flex flex-col  justify-center items-start  !px-10 md:!px-20 !py-0 md:!py-0 !min-h-[340px]">
-              <h1
+              <h1 
                 className="!mb-1 text-2xl sm:text-3xl md:text-5xl tracking-widest animate-split whitespace-nowrap"
                 style={{ display: 'inline-block' }}
               >
