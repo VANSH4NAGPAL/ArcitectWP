@@ -89,7 +89,7 @@ export default function Projects() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row w-full !p-8 !m-0">
-      <div className="md:w-1/3 w-full flex flex-col justify-end items-start !px-8 md:!pl-20 !pb-12 md:!pb-0 relative" style={{ minHeight: '500px' }}>
+      <div className="md:w-1/3 w-full flex flex-col justify-end items-start  !pb-12 md:!pb-0 relative" style={{ minHeight: '500px' }}>
         <h1 className="text-6xl md:text-7xl font-light leading-tight text-black !mb-0" style={{ fontFamily: 'Omega Sans, sans-serif' }}>
           {categories.length > 0 && categories.map((cat, i) => (
             <React.Fragment key={cat}>
