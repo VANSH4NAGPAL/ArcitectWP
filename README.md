@@ -1,64 +1,88 @@
-# 🏗️ ArchitectWP — StudioDesignPalette
+ArchitectWP — StudioDesignPalette
 
-<img src="/logofull.png" alt="StudioDesignPalette Logo" width="100%" />
+A high-performance architecture portfolio platform built with React and Vite, powered by Firebase, enhanced with GSAP and Framer Motion animations, and production-ready for Vercel deployment.
 
-> A high-performance architecture portfolio platform built with **React + Vite**, powered by **Firebase**, animated with **GSAP & Framer Motion**, and production-ready for **Vercel deployment**.
+Overview
 
----
+ArchitectWP is a modern architecture and design portfolio platform built for studios, architects, and creative agencies. It combines performance-focused frontend engineering with a scalable serverless backend architecture.
 
-## ✨ Overview
+Core Capabilities
 
-ArchitectWP is a modern architecture/design portfolio platform featuring:
+High-performance frontend built with React 18 and Vite
 
-- ⚡ Blazing-fast Vite + React frontend
-- 🎨 Tailwind CSS modern UI
-- 🎬 GSAP & Framer Motion animations
-- 🔥 Firebase (Firestore + Storage + Analytics)
-- 🖼️ ImageKit image optimization & uploads
-- 🛡️ Protected Admin Dashboard (CRUD Projects)
-- 🧪 Local API mocks (Auth + Rate Limiting + Audit Logs)
-- ☁️ Serverless API (Vercel ready)
+Modern UI using Tailwind CSS
 
-Designed for architects, studios, and creative agencies.
+Advanced animations with GSAP and Framer Motion
 
----
+Firebase integration (Firestore, Storage, Analytics)
 
-# 🧰 Tech Stack
+Image optimization and CDN delivery via ImageKit
 
-| Frontend | Backend | Media | Dev Tools |
-|----------|----------|--------|-----------|
-| React 18 | Vercel Serverless | ImageKit | Vite |
-| Tailwind CSS | JWT Auth | Firebase Storage | ESLint |
-| GSAP | Rate Limiting | Firestore | Custom Vite Mock API |
-| Framer Motion | Audit Logging | Analytics | npm |
+Protected Admin Dashboard with full CRUD operations
 
----
+Local API mocking (Authentication, Rate Limiting, Audit Logs)
 
-# 🚀 Getting Started
+Serverless deployment architecture (Vercel-ready)
 
-## 1️⃣ Prerequisites
+Technology Stack
+Frontend
 
-- Node.js **18.x**
-- npm / yarn / pnpm
-- (Optional) Vercel CLI
+React 18
 
----
+Vite
 
-## 2️⃣ Clone & Install
+Tailwind CSS
 
-```bash
+Animation
+
+GSAP
+
+Framer Motion
+
+Backend
+
+Vercel Serverless Functions
+
+JWT Authentication
+
+Custom Rate Limiting
+
+Audit Logging
+
+Database & Storage
+
+Firebase Firestore
+
+Firebase Storage
+
+Media
+
+ImageKit CDN
+
+Tooling
+
+ESLint
+
+npm
+
+Getting Started
+Prerequisites
+
+Node.js 18.x
+
+npm / yarn / pnpm
+
+(Optional) Vercel CLI
+
+Clone and Install
 git clone https://github.com/VANSH4NAGPAL/ArcitectWP.git
 cd ArcitectWP
 npm install
-```
 
----
+Environment Configuration
 
-## 3️⃣ Environment Setup
+Create a .env file in the project root:
 
-Create a `.env` file in root:
-
-```env
 # Firebase
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
@@ -74,59 +98,52 @@ VITE_IMAGEKIT_UPLOAD_PRESET=
 VITE_IMAGEKIT_PUBLIC_KEY=
 IMAGEKIT_PRIVATE_API=
 
-# Auth
+# Authentication
 JWT_SECRET=
-```
 
-⚠️ Never commit `.env` or private keys.
 
----
+Important: Never commit .env files or private keys to version control.
 
-# 💻 Development
+Development
 
-Start dev server:
+Start the development server:
 
-```bash
 npm run dev
-```
 
-Runs at:
 
-```
+Application runs at:
+
 http://localhost:5173
-```
 
----
+Local API Mocking (Development Only)
 
-## 🧪 Local API Mocking (Dev Only)
+During development, vite.config.js intercepts:
 
-During development, `vite.config.js` intercepts:
+/api/auth/*
 
-- `/api/auth/*`
-- `/api/headinfo/*`
+/api/headinfo/*
 
-Features:
-- Mock login
-- JWT token simulation
-- Rate limiting
-- Audit logging
-- Console debugging
+Features included:
 
-Example:
+Mock authentication
 
-```bash
+JWT token simulation
+
+Rate limiting logic
+
+Audit logging
+
+Debug logging
+
+Example request:
+
 curl -X POST http://localhost:5173/api/auth/auth-login \
   -H "Content-Type: application/json" \
   -d '{"username":"only@admin","password":"your-password"}'
-```
 
----
-
-# 📁 Project Structure
-
-```
+Project Structure
 .
-├── api/                  # Serverless functions (Vercel)
+├── api/                  # Vercel Serverless Functions
 ├── src/
 │   ├── components/
 │   ├── pages/
@@ -136,43 +153,32 @@ curl -X POST http://localhost:5173/api/auth/auth-login \
 │   └── main.jsx
 ├── vite.config.js
 ├── vercel.json
-└── package.json
-```
+├── package.json
+└── .env (ignored)
 
----
+Application Routes
+Public Routes
+Route	Description
+/	Landing page
+/about	Studio overview
+/projects	Project gallery
+/project/:id	Project details
+/contact	Contact page
+Admin Routes (Protected)
+Route	Description
+/headinfo	Admin dashboard
+/headinfo/add	Add project
+/headinfo/list	Project list
+/headinfo/edit/:docId	Edit project
 
-# 🌐 Routes
+Admin routes are protected using AdminAuthWrapper.
 
-## Public
+Firestore Data Model
 
-| Route | Description |
-|-------|-------------|
-| `/` | Landing Page |
-| `/about` | About Studio |
-| `/projects` | Horizontal project gallery |
-| `/project/:id` | Project detail page |
-| `/contact` | Contact page |
+Collection: projects
 
-## Admin (Protected)
+Example document:
 
-| Route | Description |
-|-------|-------------|
-| `/headinfo` | Dashboard |
-| `/headinfo/add` | Add Project |
-| `/headinfo/list` | Project List |
-| `/headinfo/edit/:docId` | Edit Project |
-
-Protected using `AdminAuthWrapper`.
-
----
-
-# 🗂️ Data Model (Firestore)
-
-Collection: `projects`
-
-Example:
-
-```json
 {
   "title": "Minimal House",
   "category": "Residential",
@@ -189,134 +195,120 @@ Example:
     "opening": "Dec 2023"
   }
 }
-```
 
----
+Image Upload Architecture
 
-# 🖼️ Image Upload Flow (ImageKit)
+Uploads are handled via:
 
-Uploads handled via:
-
-```
 src/utils/uploadToImageKit.js
-```
 
-Uses:
 
-- `file`
-- `upload_preset`
-- `fileName`
-- `publicKey`
+Parameters used:
 
-🔒 Production Recommendation:
-Use server-side signed uploads via `/api` endpoint.
+file
 
----
+upload_preset
 
-# 🛡️ Security
+fileName
 
-Before production:
+publicKey
 
-- Move Firebase config to env variables
-- Replace dev JWT secrets
-- Enable Firestore rules
-- Enable Storage rules
-- Use signed ImageKit uploads
-- Validate all admin inputs
-- Protect serverless routes
+Production recommendation: Use server-side signed uploads through a secure /api endpoint.
 
----
+Security Checklist (Pre-Production)
 
-# 🏗️ Production Build
+Move all configurations to environment variables
 
-Build:
+Replace development JWT secrets
 
-```bash
+Enable Firestore security rules
+
+Enable Firebase Storage rules
+
+Implement signed ImageKit uploads
+
+Validate all admin inputs
+
+Protect serverless routes
+
+Enable rate limiting in production
+
+Production Build
+
+Create production build:
+
 npm run build
-```
 
-Preview:
 
-```bash
+Preview production build:
+
 npm run preview
-```
 
----
+Deployment (Vercel)
+Option 1 — Dashboard
 
-# ☁️ Deploy to Vercel
+Connect GitHub repository
 
-### Option 1 — Dashboard
+Configure environment variables
 
-1. Connect GitHub repo
-2. Add environment variables
-3. Deploy
+Deploy
 
-### Option 2 — CLI
-
-```bash
+Option 2 — CLI
 npm run deploy-prod
-```
 
-(Serverless functions auto-deploy from `/api` folder)
 
----
+Serverless functions are automatically deployed from the /api directory.
 
-# 📜 NPM Scripts
+NPM Scripts
+Script	Purpose
+npm run dev	Start development server
+npm run build	Create production build
+npm run preview	Preview production build
+npm run lint	Run ESLint
+npm run deploy-prod	Deploy to Vercel
+npm run security-audit	Run security audit
+Recommended Enhancements
 
-| Script | Purpose |
-|--------|----------|
-| `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview build |
-| `npm run lint` | Lint project |
-| `npm run deploy-prod` | Deploy to Vercel |
-| `npm run security-audit` | Run audit checks |
+Add .env.example
 
----
+Add unit and integration tests
 
-# 🧾 Recommended Improvements
+Add /api documentation
 
-- Add `.env.example`
-- Add unit tests
-- Add API README in `/api`
-- Add LICENSE (MIT recommended)
-- Add GitHub badges
-- Add screenshots section
+Add LICENSE (MIT recommended)
 
----
+Add CI/CD workflow (GitHub Actions)
 
-# 🤝 Contributing
+Add screenshots and live demo link
 
-Pull requests welcome.
+Contributing
+
+Pull requests are welcome.
 
 For security-related changes:
-- Do NOT commit secrets
-- Document changes clearly
-- Keep PRs small and reviewable
 
----
+Do not commit secrets
 
-# 📄 License
+Document changes clearly
+
+Keep pull requests focused and reviewable
+
+License
 
 No license currently included.
 
 Recommended:
 
-```
 MIT License
-```
 
----
+Project Highlights
 
-# 💎 Project Highlights
+Full-stack serverless architecture
 
-- Full-stack integration
-- Serverless architecture
-- Authentication + rate limiting
-- Media optimization
-- Admin dashboard CRUD
-- Production-ready deployment
+JWT authentication with rate limiting
 
----
+Media optimization with CDN integration
 
-Made with ⚡ by Vansh Nagpal
+Admin dashboard with complete CRUD functionality
+
+Production-ready deployment pipeline
