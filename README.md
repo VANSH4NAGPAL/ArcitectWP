@@ -1,88 +1,121 @@
-ArchitectWP — StudioDesignPalette
+# ArchitectWP — StudioDesignPalette
 
-A high-performance architecture portfolio platform built with React and Vite, powered by Firebase, enhanced with GSAP and Framer Motion animations, and production-ready for Vercel deployment.
+> A high-performance architecture portfolio platform built with React and Vite, powered by Firebase, enhanced with GSAP and Framer Motion, and production-ready for serverless deployment on Vercel.
 
-Overview
+---
 
-ArchitectWP is a modern architecture and design portfolio platform built for studios, architects, and creative agencies. It combines performance-focused frontend engineering with a scalable serverless backend architecture.
+## Overview
 
-Core Capabilities
+ArchitectWP is a modern architecture and design portfolio platform engineered for studios, architects, and creative agencies. It combines a performance-optimized frontend with a scalable serverless backend, offering production-grade infrastructure with clean architecture and strong security practices.
 
-High-performance frontend built with React 18 and Vite
+The system is designed to support dynamic content management, optimized media delivery, secure authentication, and seamless deployment workflows.
 
-Modern UI using Tailwind CSS
+---
 
-Advanced animations with GSAP and Framer Motion
+## Core Capabilities
 
-Firebase integration (Firestore, Storage, Analytics)
+* High-performance frontend built with React 18 and Vite
+* Modern responsive UI using Tailwind CSS
+* Advanced motion design powered by GSAP and Framer Motion
+* Firebase integration (Firestore, Storage, Analytics)
+* CDN-based image optimization via ImageKit
+* Protected Admin Dashboard with full CRUD operations
+* Local API mocking with authentication simulation
+* JWT-based authentication with rate limiting
+* Audit logging architecture
+* Serverless deployment (Vercel-ready)
 
-Image optimization and CDN delivery via ImageKit
+---
 
-Protected Admin Dashboard with full CRUD operations
+## System Architecture
 
-Local API mocking (Authentication, Rate Limiting, Audit Logs)
+### High-Level Flow
 
-Serverless deployment architecture (Vercel-ready)
+```
+Client (Browser)
+        │
+        ▼
+React + Tailwind UI
+        │
+        ▼
+Authentication Layer (JWT)
+        │
+        ▼
+Serverless API (/api)
+        │
+        ├── Firestore (Database)
+        ├── Firebase Storage
+        └── ImageKit CDN
+```
 
-Technology Stack
-Frontend
+---
 
-React 18
+## Technology Stack
 
-Vite
+### Frontend
 
-Tailwind CSS
+* React 18
+* Vite
+* Tailwind CSS
 
-Animation
+### Animation
 
-GSAP
+* GSAP
+* Framer Motion
 
-Framer Motion
+### Backend (Serverless)
 
-Backend
+* Vercel Serverless Functions
+* JWT Authentication
+* Custom Rate Limiting
+* Audit Logging
 
-Vercel Serverless Functions
+### Database & Storage
 
-JWT Authentication
+* Firebase Firestore
+* Firebase Storage
 
-Custom Rate Limiting
+### Media Optimization
 
-Audit Logging
+* ImageKit CDN
 
-Database & Storage
+### Tooling
 
-Firebase Firestore
+* ESLint
+* npm
 
-Firebase Storage
+---
 
-Media
+## Getting Started
 
-ImageKit CDN
+### Prerequisites
 
-Tooling
+* Node.js 18.x
+* npm / yarn / pnpm
+* (Optional) Vercel CLI
 
-ESLint
+---
 
-npm
+### 1. Clone Repository
 
-Getting Started
-Prerequisites
-
-Node.js 18.x
-
-npm / yarn / pnpm
-
-(Optional) Vercel CLI
-
-Clone and Install
+```bash
 git clone https://github.com/VANSH4NAGPAL/ArcitectWP.git
 cd ArcitectWP
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
+```
 
-Environment Configuration
+---
 
-Create a .env file in the project root:
+## Environment Configuration
 
+Create a `.env` file in the project root:
+
+```env
 # Firebase
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
@@ -100,48 +133,57 @@ IMAGEKIT_PRIVATE_API=
 
 # Authentication
 JWT_SECRET=
+```
 
+**Important:**
+Never commit `.env` files or private keys to version control.
 
-Important: Never commit .env files or private keys to version control.
+---
 
-Development
+## Development
 
-Start the development server:
+Start development server:
 
+```bash
 npm run dev
-
+```
 
 Application runs at:
 
+```
 http://localhost:5173
+```
 
-Local API Mocking (Development Only)
+---
 
-During development, vite.config.js intercepts:
+## Local API Mocking (Development Only)
 
-/api/auth/*
+During development, `vite.config.js` intercepts:
 
-/api/headinfo/*
+* `/api/auth/*`
+* `/api/headinfo/*`
 
-Features included:
+Included features:
 
-Mock authentication
+* Mock authentication
+* JWT token simulation
+* Rate limiting logic
+* Audit logging
+* Debug logging
 
-JWT token simulation
+### Example Request
 
-Rate limiting logic
-
-Audit logging
-
-Debug logging
-
-Example request:
-
+```bash
 curl -X POST http://localhost:5173/api/auth/auth-login \
   -H "Content-Type: application/json" \
   -d '{"username":"only@admin","password":"your-password"}'
+```
 
-Project Structure
+---
+
+## Project Structure
+
+```
 .
 ├── api/                  # Vercel Serverless Functions
 ├── src/
@@ -155,30 +197,42 @@ Project Structure
 ├── vercel.json
 ├── package.json
 └── .env (ignored)
+```
 
-Application Routes
-Public Routes
-Route	Description
-/	Landing page
-/about	Studio overview
-/projects	Project gallery
-/project/:id	Project details
-/contact	Contact page
-Admin Routes (Protected)
-Route	Description
-/headinfo	Admin dashboard
-/headinfo/add	Add project
-/headinfo/list	Project list
-/headinfo/edit/:docId	Edit project
+---
 
-Admin routes are protected using AdminAuthWrapper.
+## Application Routes
 
-Firestore Data Model
+### Public Routes
 
-Collection: projects
+| Route        | Description     |
+| ------------ | --------------- |
+| /            | Landing page    |
+| /about       | Studio overview |
+| /projects    | Project gallery |
+| /project/:id | Project details |
+| /contact     | Contact page    |
+
+### Admin Routes (Protected)
+
+| Route                 | Description     |
+| --------------------- | --------------- |
+| /headinfo             | Admin dashboard |
+| /headinfo/add         | Add project     |
+| /headinfo/list        | Project list    |
+| /headinfo/edit/:docId | Edit project    |
+
+Admin routes are protected using `AdminAuthWrapper`.
+
+---
+
+## Firestore Data Model
+
+**Collection:** `projects`
 
 Example document:
 
+```json
 {
   "title": "Minimal House",
   "category": "Residential",
@@ -195,120 +249,130 @@ Example document:
     "opening": "Dec 2023"
   }
 }
+```
 
-Image Upload Architecture
+---
+
+## Image Upload Architecture
 
 Uploads are handled via:
 
+```
 src/utils/uploadToImageKit.js
-
+```
 
 Parameters used:
 
-file
+* file
+* upload_preset
+* fileName
+* publicKey
 
-upload_preset
+**Production Recommendation:**
+Use server-side signed uploads through a secure `/api` endpoint.
 
-fileName
+---
 
-publicKey
+## Security Checklist (Pre-Production)
 
-Production recommendation: Use server-side signed uploads through a secure /api endpoint.
+* Move all configurations to environment variables
+* Replace development JWT secrets
+* Enable Firestore security rules
+* Enable Firebase Storage rules
+* Implement signed ImageKit uploads
+* Validate all admin inputs
+* Protect serverless routes
+* Enable production rate limiting
 
-Security Checklist (Pre-Production)
+---
 
-Move all configurations to environment variables
-
-Replace development JWT secrets
-
-Enable Firestore security rules
-
-Enable Firebase Storage rules
-
-Implement signed ImageKit uploads
-
-Validate all admin inputs
-
-Protect serverless routes
-
-Enable rate limiting in production
-
-Production Build
+## Production Build
 
 Create production build:
 
+```bash
 npm run build
-
+```
 
 Preview production build:
 
+```bash
 npm run preview
+```
 
-Deployment (Vercel)
-Option 1 — Dashboard
+---
 
-Connect GitHub repository
+## Deployment (Vercel)
 
-Configure environment variables
+### Option 1 — Dashboard
 
-Deploy
+1. Connect GitHub repository
+2. Configure environment variables
+3. Deploy
 
-Option 2 — CLI
+### Option 2 — CLI
+
+```bash
 npm run deploy-prod
+```
 
+Serverless functions are automatically deployed from the `/api` directory.
 
-Serverless functions are automatically deployed from the /api directory.
+---
 
-NPM Scripts
-Script	Purpose
-npm run dev	Start development server
-npm run build	Create production build
-npm run preview	Preview production build
-npm run lint	Run ESLint
-npm run deploy-prod	Deploy to Vercel
-npm run security-audit	Run security audit
-Recommended Enhancements
+## NPM Scripts
 
-Add .env.example
+| Script                 | Purpose                  |
+| ---------------------- | ------------------------ |
+| npm run dev            | Start development server |
+| npm run build          | Create production build  |
+| npm run preview        | Preview production build |
+| npm run lint           | Run ESLint               |
+| npm run deploy-prod    | Deploy to Vercel         |
+| npm run security-audit | Run security audit       |
 
-Add unit and integration tests
+---
 
-Add /api documentation
+## Recommended Enhancements
 
-Add LICENSE (MIT recommended)
+* Add `.env.example`
+* Add unit and integration tests
+* Add `/api` documentation
+* Add LICENSE (MIT recommended)
+* Add CI/CD workflow (GitHub Actions)
+* Add screenshots and live demo link
 
-Add CI/CD workflow (GitHub Actions)
+---
 
-Add screenshots and live demo link
-
-Contributing
+## Contributing
 
 Pull requests are welcome.
 
 For security-related changes:
 
-Do not commit secrets
+* Do not commit secrets
+* Document changes clearly
+* Keep pull requests focused and reviewable
 
-Document changes clearly
+---
 
-Keep pull requests focused and reviewable
-
-License
+## License
 
 No license currently included.
 
 Recommended:
-
 MIT License
 
-Project Highlights
+---
 
-Full-stack serverless architecture
+## Project Highlights
 
-JWT authentication with rate limiting
+* Full-stack serverless architecture
+* JWT authentication with rate limiting
+* Media optimization via CDN integration
+* Secure admin dashboard with complete CRUD functionality
+* Production-ready deployment pipeline
 
-Media optimization with CDN integration
+---
 
-Admin dashboard with complete CRUD functionality
-
-Production-ready deployment pipeline
+ArchitectWP is structured as a scalable, secure, and performance-driven portfolio system ready for professional studio deployment and long-term extensibility.
